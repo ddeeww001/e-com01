@@ -1,0 +1,184 @@
+[
+  {
+    "id": 1,
+    "title": "Aura 75% Barebone Kit",
+    "description": "Premium aluminum 75% layout barebone keyboard with gasket mount.",
+    "price": 4500,
+    "originalPrice": 5500,
+    "badge": "Sale",
+    "badgeClass": "sale",
+    "category": "Keyboards",
+    "imageUrl": "/images/aura-75.jpg"
+  },
+  {
+    "id": 2,
+    "title": "Lunar 65% Wireless Keyboard",
+    "description": "Compact and portable 65% mechanical keyboard with Bluetooth 5.0.",
+    "price": 3200,
+    "badge": "Best Seller",
+    "badgeClass": "seller",
+    "category": "Keyboards",
+    "imageUrl": "/images/lunar-65.jpg"
+  },
+  {
+    "id": 3,
+    "title": "ErgoSplit Pro",
+    "description": "Ergonomic split keyboard for maximum comfort during long coding sessions.",
+    "price": 5800,
+    "badge": "New Arrival",
+    "badgeClass": "new",
+    "category": "Keyboards",
+    "imageUrl": "/images/ergo-split.jpg"
+  },
+  {
+    "id": 4,
+    "title": "Numpad Classic Plus",
+    "description": "Standalone mechanical numpad for data entry professionals.",
+    "price": 1200,
+    "category": "Keyboards",
+    "imageUrl": "/images/numpad-classic.jpg"
+  },
+  {
+    "id": 5,
+    "title": "Matcha Linear Switches (90pcs)",
+    "description": "Smooth and quiet linear switches, pre-lubed for optimal performance.",
+    "price": 1350,
+    "category": "Switches",
+    "imageUrl": "/images/matcha-linear.jpg"
+  },
+  {
+    "id": 6,
+    "title": "Ocean Tactile Switches (90pcs)",
+    "description": "Crisp tactile bump with a satisfying bottom out sound.",
+    "price": 1400,
+    "category": "Switches",
+    "imageUrl": "/images/ocean-tactile.jpg"
+  },
+  {
+    "id": 7,
+    "title": "Clicky Blue Pro (90pcs)",
+    "description": "Loud and clicky switches for those who love the typewriter feel.",
+    "price": 1100,
+    "originalPrice": 1500,
+    "badge": "Sale",
+    "badgeClass": "sale",
+    "category": "Switches",
+    "imageUrl": "/images/clicky-blue.jpg"
+  },
+  {
+    "id": 8,
+    "title": "Silent Red V2 (90pcs)",
+    "description": "Ultra-quiet linear switches, perfect for office environments.",
+    "price": 1500,
+    "category": "Switches",
+    "imageUrl": "/images/silent-red.jpg"
+  },
+  {
+    "id": 9,
+    "title": "Retro PBT Keycap Set",
+    "description": "Thick PBT dye-sub keycaps in a classic 90s retro colorway.",
+    "price": 1800,
+    "category": "Keycaps",
+    "imageUrl": "/images/retro-pbt.jpg"
+  },
+  {
+    "id": 10,
+    "title": "Cyberpunk Neon Keycaps",
+    "description": "Translucent ABS double-shot keycaps with neon legends.",
+    "price": 2100,
+    "badge": "Best Seller",
+    "badgeClass": "seller",
+    "category": "Keycaps",
+    "imageUrl": "/images/cyberpunk-neon.jpg"
+  },
+  {
+    "id": 11,
+    "title": "Minimalist White PBT",
+    "description": "Clean and simple all-white keycap set with black minimalist legends.",
+    "price": 1500,
+    "category": "Keycaps",
+    "imageUrl": "/images/minimal-white.jpg"
+  },
+  {
+    "id": 12,
+    "title": "Artisan Resin Esc Key",
+    "description": "Hand-crafted resin keycap featuring a tiny galaxy inside.",
+    "price": 850,
+    "badge": "New Arrival",
+    "badgeClass": "new",
+    "category": "Keycaps",
+    "imageUrl": "/images/artisan-esc.jpg"
+  },
+  {
+    "id": 13,
+    "title": "Premium Coiled Cable (Type-C)",
+    "description": "Durable aviator coiled cable for a clean desk setup.",
+    "price": 850,
+    "originalPrice": 1100,
+    "badge": "Sale",
+    "badgeClass": "sale",
+    "category": "Accessories",
+    "imageUrl": "/images/coiled-cable.jpg"
+  },
+  {
+    "id": 14,
+    "title": "Walnut Wooden Wrist Rest",
+    "description": "Solid walnut wood wrist rest, hand-polished and coated.",
+    "price": 750,
+    "category": "Accessories",
+    "imageUrl": "/images/walnut-rest.jpg"
+  },
+  {
+    "id": 15,
+    "title": "Switch Lube Station",
+    "description": "Acrylic acrylic lube station holding up to 36 switches.",
+    "price": 450,
+    "category": "Tools",
+    "imageUrl": "/images/lube-station.jpg"
+  },
+  {
+    "id": 16,
+    "title": "Krytox GPL 205g0 (5g)",
+    "description": "Industry-standard mechanical switch lubricant.",
+    "price": 350,
+    "badge": "Best Seller",
+    "badgeClass": "seller",
+    "category": "Tools",
+    "imageUrl": "/images/krytox-205.jpg"
+  },
+  {
+    "id": 17,
+    "title": "Switch & Keycap Puller 2-in-1",
+    "description": "Wire keycap puller and metal switch puller combo.",
+    "price": 150,
+    "category": "Tools",
+    "imageUrl": "/images/puller-combo.jpg"
+  },
+  {
+    "id": 18,
+    "title": "Deskmat: Topo Black",
+    "description": "Extra-large smooth mousepad with a subtle topographic map design.",
+    "price": 890,
+    "category": "Accessories",
+    "imageUrl": "/images/deskmat-topo.jpg"
+  },
+  {
+    "id": 19,
+    "title": "Deskmat: Sakura Pink",
+    "description": "High-quality deskmat featuring a cherry blossom pattern.",
+    "price": 690,
+    "originalPrice": 890,
+    "badge": "Sale",
+    "badgeClass": "sale",
+    "category": "Accessories",
+    "imageUrl": "/images/deskmat-sakura.jpg"
+  },
+  {
+    "id": 20,
+    "title": "Cleaning Brush & Air Duster",
+    "description": "Essential kit to keep your mechanical keyboard free of dust.",
+    "price": 250,
+    "category": "Tools",
+    "imageUrl": "/images/cleaning-kit.jpg"
+  }
+]
