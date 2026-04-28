@@ -237,7 +237,7 @@
             <h2>Tastefully Yours</h2>
           </div>
         </div>
-				<div class="row">
+				<div class="row" id="product-container">
 					<div class="col-md-3 d-flex">
 						<div class="product ftco-animate">
 							<div class="img d-flex align-items-center justify-content-center" style="background-image: url(images/prod-1.jpg);">
@@ -659,71 +659,71 @@
   <script src="js/google-map.js"></script>
   <script src="js/main.js"></script>
   <script>
-  function loadProducts() {
-    // 1. Target the container where the grid will be rendered
-    const container = document.getElementById('product-container');
+	function loadProducts() {
+    const container = document.querySelector('#product-container');
+    if (!container) return;
 
-    // Display a loading state before the fetch completes
-    container.innerHTML = '<p style="text-align: center;">Loading products...</p>';
+    // เราจะไม่ใช้ container.innerHTML = 'Loading...' แล้ว เพราะจะไปทับสินค้า Hardcode เดิม
 
-    // 2. Use fetch() to retrieve the JSON file
     fetch('data/products.json')
         .then(response => {
-            // Check if the network response is successful
             if (!response.ok) {
-                throw new Error(`Network response failed with status: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
         .then(products => {
-            // 3. Map through the JSON data and dynamically generate HTML
             const productsHTML = products.map(product => {
                 
-                // Handle optional properties (Badges and Original Price)
-                const badgeHTML = product.badge ? `<span class="badge ${product.badgeClass}" style="position: absolute; top: 10px; left: 10px; background: red; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${product.badge}</span>` : '';
-                
-                const priceHTML = product.originalPrice 
-                    ? `<span style="text-decoration: line-through; color: #888; margin-right: 5px;">฿${product.originalPrice.toLocaleString()}</span> <span style="color: #e44d26; font-weight: bold;">฿${product.price.toLocaleString()}</span>`
-                    : `<span style="color: #e44d26; font-weight: bold;">฿${product.price.toLocaleString()}</span>`;
+                const badgeHTML = product.badge 
+                    ? `<span class="${product.badgeClass || 'sale'}" style="position: absolute; top: 10px; left: 10px; z-index: 1; padding: 5px 10px; color: #fff; background: ${product.badgeClass === 'badge-danger' ? 'red' : 'orange'};">${product.badge}</span>` 
+                    : '';
 
-                // Return the HTML block for a single product
+                const priceHTML = product.originalPrice
+                    ? `<p class="mb-0"><span class="price price-sale" style="text-decoration: line-through; color: #b3b3b3; margin-right: 10px;">฿${product.originalPrice.toLocaleString()}</span> <span class="price">฿${product.price.toLocaleString()}</span></p>`
+                    : `<p class="mb-0"><span class="price">฿${product.price.toLocaleString()}</span></p>`;
+
                 return `
-                    <div class="product-item" data-id="${product.id}" style="border: 1px solid #eee; padding: 15px; border-radius: 8px; position: relative;">
-                        ${badgeHTML}
-                        <img src="${product.imageUrl}" alt="${product.title}" style="width: 100%; height: auto; border-radius: 4px; background: #f8f9fa;">
-                        
-                        <div class="product-info" style="margin-top: 15px;">
-                            <span class="category" style="font-size: 12px; color: #666; text-transform: uppercase;">${product.category}</span>
-                            <h3 style="font-size: 16px; margin: 5px 0;">${product.title}</h3>
-                            <p style="font-size: 14px; color: #777;">${product.description}</p>
-                            <div class="price-container" style="margin-top: 10px;">
+                    <div class="col-md-3 d-flex mb-4">
+                        <div class="product w-100 position-relative">
+                            ${badgeHTML}
+                            <div class="img d-flex align-items-center justify-content-center" style="background-image: url(${product.imageUrl}); height: 300px; background-size: cover; background-position: center;">
+                                <div class="desc">
+                                    <p class="meta-prod d-flex">
+                                        <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-shopping-bag"></span></a>
+                                        <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-heart"></span></a>
+                                        <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-visibility"></span></a>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text text-center pt-3 mt-3">
+                                <span class="category">${product.category}</span>
+                                <h2>${product.title}</h2>
                                 ${priceHTML}
                             </div>
                         </div>
                     </div>
                 `;
-            }).join(''); // join('') removes the commas between array items
+            }).join('');
 
-            // 4. Populate the HTML grid
-            container.innerHTML = productsHTML;
+            // *** จุดที่แก้ไข ***
+            // ใช้คำสั่ง insertAdjacentHTML แบบ 'beforeend' เพื่อนำสินค้าจาก JSON ไปต่อท้ายสินค้า Hardcode
+            //container.insertAdjacentHTML('beforeend', productsHTML);
+			container.innerHTML = productsHTML;
         })
         .catch(error => {
-            // 5. Basic Error Catch
-            console.error('Failed to load product data:', error);
-            
-            // Display an error message inside the container
-            container.innerHTML = `
-                <div class="error-state" style="text-align: center; color: red; padding: 20px; border: 1px solid red; border-radius: 8px;">
-                    <h3>Data Load Error</h3>
-                    <p>Unable to retrieve the product list. Please make sure the server is running and the JSON file exists.</p>
+            console.error('Error fetching product data:', error);
+            // ถ้าระบบ Error เราจะแทรกข้อความ Error ไว้ต่อท้ายสินค้า Hardcode แทนที่จะลบทิ้งทั้งหมด
+            container.insertAdjacentHTML('beforeend', `
+                <div class="col-12 text-center text-danger mt-5">
+                    <i class="fa fa-exclamation-triangle mb-2"></i>
+                    <p>ไม่สามารถโหลดข้อมูลสินค้าเพิ่มเติมได้ (${error.message})</p>
                 </div>
-            `;
+            `);
         });
 }
 
-// Execute the function when the script loads
-loadProducts();
-   </script>  
-
+document.addEventListener('DOMContentLoaded', loadProducts);
+  </script>
   </body>
 </html>
