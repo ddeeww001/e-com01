@@ -19,7 +19,11 @@ function renderProducts(products) {
                      style="background-image: url(${p.imageUrl}); height: 300px; background-size: cover;">
                     <div class="desc">
                         <p class="meta-prod d-flex">
-                            <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-shopping-bag"></span></a>
+                            
+                            <!-- ✅ จุดที่ต้องแก้: เพิ่มคลาส add-to-cart และ data-id="\${p.id}" เข้าไป -->
+                            <a href="#" class="add-to-cart d-flex align-items-center justify-content-center" data-id="${p.id}">
+                                <span class="flaticon-shopping-bag"></span>
+                            </a>
                             <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-heart"></span></a>
                             <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-visibility"></span></a>
                         </p>
