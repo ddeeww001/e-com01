@@ -74,13 +74,20 @@ function renderAuthUI() {
     }
 }
 
+// ==========================================
+// ควบคุมสิทธิ์การเข้าถึง (Auth Guard & UI State)
+// ==========================================
 function updateUIState() {
     const userString = localStorage.getItem('sunUser');
     const authBtn = document.getElementById('authBtn');
     const signupBtn = document.getElementById('signupBtn');
-    const isIndexPage = (window.location.pathname.split('/').pop() === 'index.html' || window.location.pathname === '/' || window.location.pathname === '');
+    
+    // เช็คว่าตอนนี้อยู่หน้าอะไร
+    const currentPage = window.location.pathname.split('/').pop();
+    const isIndexPage = (currentPage === 'index.html' || currentPage === '' || currentPage === '/');
 
     if (userString) {
+        // --- กรณี: เข้าสู่ระบบแล้ว ---
         const user = JSON.parse(userString);
         if(authBtn) {
             authBtn.innerHTML = `<span class="fa fa-user mr-1"></span> Hi, ${user.username} (Sign Out)`;
@@ -92,13 +99,35 @@ function updateUIState() {
             };
         }
         if(signupBtn) signupBtn.style.display = 'none';
+
     } else {
+        // --- กรณี: ยังไม่เข้าสู่ระบบ ---
         if(authBtn) authBtn.innerHTML = "Sign In";
         if(signupBtn) signupBtn.style.display = 'inline';
+
+        // 🌟 ปรับปรุงใหม่ 1: ดักจับการคลิกทุกลิงก์ที่พาไปหน้าอื่น เพื่อให้ "อยู่หน้าเดิม"
+        document.querySelectorAll('a').forEach(link => {
+            const href = link.getAttribute('href');
+            
+            // ถ้าลิงก์พาไปหน้าที่มี .html และไม่ใช่หน้า index.html (บล็อกทุกหน้ายกเว้นหน้าแรก)
+            if (href && href.includes('.html') && !href.includes('index.html')) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault(); // 🛑 สั่งให้หยุด! ไม่ต้องโหลดเปลี่ยนหน้า (ให้อยู่หน้าเดิม)
+                    alert("กรุณาเข้าสู่ระบบก่อนเข้าชมหน้านี้");
+                    $('#signinModal').modal('show'); // เปิดกล่องล็อกอินขึ้นมาให้ทันที
+                });
+            }
+        });
+
+        // 🚨 ปรับปรุงใหม่ 2: ดักจับกรณีคนดื้อ "พิมพ์ URL" เข้าหน้าอื่นตรงๆ (เช่นพิมพ์ /cart.html เอง)
+        // เราจะเตือน แล้วใช้คำสั่งกดย้อนกลับ (Back) แทนการเตะกลับ index แบบดื้อๆ
         if (!isIndexPage) {
             alert("กรุณาเข้าสู่ระบบก่อนเข้าชมหน้านี้");
-            window.location.href = 'index.html';
-            return; 
+            if (window.history.length > 1) {
+                window.history.back(); // สั่งให้เบราว์เซอร์กดย้อนกลับไปหน้าเดิม
+            } else {
+                window.location.href = 'index.html'; // ถ้าเปิดแท็บใหม่เข้ามา ค่อยส่งไปหน้าแรก
+            }
         }
     }
 }
