@@ -2,101 +2,79 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
+const sqlite3 = require('sqlite3');
 const fs = require('fs').promises;
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
-const SECRET = "SUN_PRO_SECURE_KEY_2026"; 
-
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(__dirname)); 
 
-// ==========================================
-// 1. เชื่อมต่อ SQLite และสร้างตาราง
-// ==========================================
-// ==========================================
-// 1. เชื่อมต่อ SQLite และสร้างตาราง
-// ==========================================
+const SECRET = "SUN_PRO_SECURE_KEY_2026";
 let db;
+
 (async () => {
     db = await open({ filename: './database.sqlite', driver: sqlite3.Database });
+    await db.exec(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT UNIQUE, password TEXT, role TEXT DEFAULT 'customer')`);
     
-    // 🌟 สั่งลบตารางเก่าทิ้งไปเลย (แก้ปัญหาตารางค้าง)
-    await db.exec(`DROP TABLE IF EXISTS users`);
+    // 🌟 ดึงข้อมูลจากไฟล์ JSON ของคุณมาใส่ SQLite อัตโนมัติ
+    const dataDir = path.join(__dirname, 'data');
+    await fs.mkdir(dataDir, { recursive: true }).catch(() => {}); 
     
-    // สร้างใหม่ให้มีช่อง email 
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            email TEXT UNIQUE, 
-            password TEXT,
-            role TEXT DEFAULT 'customer'
-        )
-    `);
-    console.log("🗄️ SQLite Connected & Tables Ready.");
+    try {
+        const usersData = await fs.readFile(path.join(dataDir, 'users.json'), 'utf8');
+        const jsonUsers = JSON.parse(usersData);
+        
+        for (let u of jsonUsers) {
+            const exists = await db.get('SELECT * FROM users WHERE username = ?', [u.username]);
+            if (!exists) {
+                // เข้ารหัสรหัสผ่านจาก JSON ก่อนบันทึก เพื่อให้ Sign In ทำงานได้
+                const hash = await bcrypt.hash(u.password, 10);
+                const email = u.email || `${u.username}@example.com`; // ดักจับกรณีใน JSON ไม่มีฟิลด์ email
+                await db.run('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [u.username, email, hash, u.role || 'customer']);
+            }
+        }
+        console.log("✅ ซิงค์ข้อมูลจาก users.json ลง SQLite สำเร็จ");
+    } catch (err) {
+        // กรณีไม่มีไฟล์ JSON
+    }
+    
+    console.log("🗄️ SQLite & Folders Ready.");
 })();
 
-// ==========================================
-// 2. API: Sign Up (บันทึกลง SQLite + users.json)
-// ==========================================
 app.post('/api/signup', async (req, res) => {
     const { username, email, password } = req.body;
     if (!username || !email || !password) return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
 
     try {
-        const existingEmail = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-        if (existingEmail) return res.status(409).json({ errorType: "EMAIL_EXISTS", message: "อีเมลนี้มีผู้ใช้งานแล้ว กรุณาเข้าสู่ระบบ" });
-
-        const existingUsername = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-        if (existingUsername) return res.status(409).json({ errorType: "USERNAME_TAKEN", message: "ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาตั้งชื่อใหม่" });
+        const userExists = await db.get('SELECT email, username FROM users WHERE email = ? OR username = ?', [email, username]);
+        if (userExists) {
+            const isEmail = userExists.email === email;
+            return res.status(409).json({ 
+                errorType: isEmail ? "EMAIL_EXISTS" : "USERNAME_TAKEN", 
+                message: isEmail ? "อีเมลนี้มีผู้ใช้งานแล้ว" : "ชื่อผู้ใช้นี้ถูกใช้งานแล้ว" 
+            });
+        }
 
         const hash = await bcrypt.hash(password, 10);
-        const result = await db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hash]);
+        const { lastID } = await db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hash]);
 
-        // --- ระบบเขียนไฟล์ JSON สำรอง ---
-        const dataDir = path.join(__dirname, 'data');
-        const usersFilePath = path.join(dataDir, 'users.json');
-        
-        // ถ้าไม่มีโฟลเดอร์ data ให้สร้างขึ้นมาอัตโนมัติ (แก้ปัญหา Error 500 จุดที่ 1)
-        try { await fs.mkdir(dataDir, { recursive: true }); } catch (err) {}
+        // Backup ลง JSON
+        const fp = path.join(__dirname, 'data', 'users.json');
+        let users = [];
+        try { users = JSON.parse(await fs.readFile(fp, 'utf8')); } catch (e) {}
+        users.push({ id: lastID, username, email, password: hash, role: 'customer', createdAt: new Date().toISOString() });
+        await fs.writeFile(fp, JSON.stringify(users, null, 2));
 
-        let usersJson = [];
-        try {
-            const fileData = await fs.readFile(usersFilePath, 'utf8');
-            if (fileData) usersJson = JSON.parse(fileData);
-        } catch (err) { }
-
-        usersJson.push({
-            id: result.lastID,
-            username: username,
-            email: email,
-            password: hash,
-            role: 'customer',
-            createdAt: new Date().toISOString()
-        });
-
-        await fs.writeFile(usersFilePath, JSON.stringify(usersJson, null, 2), 'utf8');
-        // --------------------------------
-
-        res.status(201).json({ message: "สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ" });
-    } catch (err) {
-        console.error("Signup Error (ดูตรงนี้ว่าพังเพราะอะไร):", err);
-        res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
-    }
+        res.status(201).json({ message: "สมัครสมาชิกสำเร็จ" });
+    } catch (err) { res.status(500).json({ message: "Server Error" }); }
 });
 
-// ==========================================
-// 3. API: Sign In (รับชื่อ หรือ อีเมล ก็ได้)
-// ==========================================
 app.post('/api/signin', async (req, res) => {
     try {
         const { identifier, password } = req.body;
-        
         const user = await db.get('SELECT * FROM users WHERE username = ? OR email = ?', [identifier, identifier]);
 
         if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -104,16 +82,9 @@ app.post('/api/signin', async (req, res) => {
         }
 
         const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET, { expiresIn: '24h' });
-        res.json({ message: "เข้าสู่ระบบสำเร็จ", token, user: { id: user.id, username: user.username, role: user.role } });
-    } catch (err) {
-        console.error("Signin Error:", err);
-        res.status(500).json({ message: "Server Error" });
-    }
+        res.json({ message: "เข้าสู่ระบบสำเร็จ", token, user: { id: user.id, username: user.username } });
+    } catch (err) { res.status(500).json({ message: "Server Error" }); }
 });
 
-// เสิร์ฟ Routes อื่นๆ (ถ้ามี)
- app.use('/api/products', require('./src/routes/productRoutes'));
-
-app.listen(PORT, () => {
-    console.log(`🚀 Backend Server กำลังรันที่ http://localhost:${PORT}`);
-});
+// app.use('/api/products', require('./src/routes/productRoutes'));
+app.listen(3000, () => console.log('🚀 Server is running on port 3000'));

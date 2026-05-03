@@ -1,22 +1,18 @@
 [
   {
     "id": 1,
-    "username": "sun",
-    "password": "password123",
-    "role": "admin"
-  },
-  {
-    "id": 2,
-    "username": "customer",
-    "password": "customer123",
-    "role": "user"
-  },
-  {
-    "id": 1,
     "username": "dew",
     "email": "dewthitirat@gmail.com",
     "password": "$2b$10$yoS1axgdcXSxdfYmEIgMsO96r4DE3Ik91GpPyo.j4HEV2crE7/nTG",
     "role": "customer",
     "createdAt": "2026-05-03T10:40:32.215Z"
+  },
+  {
+    "id": 2,
+    "username": "ddeeww",
+    "email": "kinggod592549@gmail.com",
+    "password": "$2b$10$KRoRQu3j.jroZpGwpljIEOqMsxbVBLjOoyROqAS6LbYn5.1jYxWIm",
+    "role": "customer",
+    "createdAt": "2026-05-03T11:00:08.626Z"
   }
 ]
