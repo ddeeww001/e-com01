@@ -39,7 +39,11 @@
 			    		</p>
 		        </div>
 		        <div class="reg">
-		        	<p class="mb-0"><a href="#" class="mr-2">Sign Up</a> <a href="#">Log In</a></p>
+		        	<p class="mb-0">
+						<!-- <a href="#" class="mr-2">Sign Up</a> 
+						<a href="#">Log In</a></p> -->
+						<a href="#" class="mr-2" id="signupBtn" data-toggle="modal" data-target="#signupModal">Sign Up</a> 
+                        <a href="#" id="authBtn" data-toggle="modal" data-target="#loginModal">Log In</a>
 		        </div>
 					</div>
 				</div>
@@ -675,6 +679,8 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVWaKrjvy3MaE7SQ74_uJiULgl1JY0H2s&sensor=false"></script>
   <script src="js/google-map.js"></script>
   <script src="js/main.js"></script>
+ 
+  <script src="js/authService.js"></script>
   <script src="js/showProducts.js"></script>
   <script src="js/searchProducts.js"></script>
   <script src="js/cartService.js"></script>
