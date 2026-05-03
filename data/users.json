@@ -14,5 +14,13 @@
     "password": "$2b$10$KRoRQu3j.jroZpGwpljIEOqMsxbVBLjOoyROqAS6LbYn5.1jYxWIm",
     "role": "customer",
     "createdAt": "2026-05-03T11:00:08.626Z"
+  },
+  {
+    "id": 3,
+    "username": "dew12",
+    "email": "thitirat_sirisawad@cmu.ac.th",
+    "password": "$2b$10$ndZdVAzYRnkr1Q6kuLKGxeO65.qC./GYhvaYP5dOF4giKhX5PPwgm",
+    "role": "customer",
+    "createdAt": "2026-05-03T13:38:59.265Z"
   }
 ]

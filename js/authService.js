@@ -107,14 +107,17 @@ function updateUIState() {
             if (href && href.includes('.html') && !href.includes('index.html')) {
                 link.addEventListener('click', (e) => {
                     e.preventDefault(); 
-                    alert("กรุณาเข้าสู่ระบบก่อนเข้าชมหน้านี้");
-                    $('#signinModal').modal('show'); 
+                    // 🌟 เปลี่ยนข้อความให้เข้ากับการเด้งหน้า Sign Up
+                    alert("กรุณาสมัครสมาชิกก่อนเข้าชมหน้านี้"); 
+                    // 🌟 เปลี่ยนจาก signinModal เป็น signupModal
+                    $('#signupModal').modal('show'); 
                 });
             }
         });
 
         if (!isIndexPage) {
-            alert("กรุณาเข้าสู่ระบบก่อนเข้าชมหน้านี้");
+            // 🌟 เปลี่ยนข้อความแจ้งเตือนกรณีพิมพ์ URL เข้ามาตรงๆ ด้วย
+            alert("กรุณาสมัครสมาชิกก่อนเข้าชมหน้านี้"); 
             if (window.history.length > 1) {
                 window.history.back(); 
             } else {
