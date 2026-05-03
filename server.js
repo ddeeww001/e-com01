@@ -21,31 +21,29 @@ let db;
     
     // 2. ตารางเก็บข้อมูลสินค้า (เพิ่มใหม่)
     await db.exec(`
-        CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            category TEXT,
-            price REAL,
-            image_url TEXT
-        )
-    `);
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        email TEXT UNIQUE, -- เพิ่มฟิลด์ email
+        password TEXT,
+        role TEXT DEFAULT 'customer'
+    )
+`);
     
     console.log("🗄️ SQLite Connected & Tables Ready.");
 })();
 
 // 2. API: สมัครสมาชิก (เร็วขึ้น! ทำงาน DB แค่ 1 รอบ ไม่ต้องเช็คซ้ำ)
 app.post('/api/signup', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
+    const { username, email, password } = req.body; // รับ email เพิ่ม
+    if (!username || !email || !password) return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
 
     try {
         const hash = await bcrypt.hash(password, 10);
-        // สั่ง Insert เลย ถ้าชื่อซ้ำ DB จะโยน Error ออกมาเอง
-        await db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hash]);
-        res.status(201).json({ message: "สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ" });
+        await db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hash]);
+        res.status(201).json({ message: "สมัครสมาชิกสำเร็จ" });
     } catch (err) {
-        // ดัก Error กรณีชื่อผู้ใช้ซ้ำ (UNIQUE constraint failed)
-        res.status(400).json({ message: "ชื่อผู้ใช้นี้มีในระบบแล้ว" });
+        res.status(400).json({ message: "ชื่อผู้ใช้หรืออีเมลนี้มีในระบบแล้ว" });
     }
 });
 
