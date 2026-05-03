@@ -82,12 +82,10 @@ function updateUIState() {
     const authBtn = document.getElementById('authBtn');
     const signupBtn = document.getElementById('signupBtn');
     
-    // เช็คว่าตอนนี้อยู่หน้าอะไร
     const currentPage = window.location.pathname.split('/').pop();
     const isIndexPage = (currentPage === 'index.html' || currentPage === '' || currentPage === '/');
 
     if (userString) {
-        // --- กรณี: เข้าสู่ระบบแล้ว ---
         const user = JSON.parse(userString);
         if(authBtn) {
             authBtn.innerHTML = `<span class="fa fa-user mr-1"></span> Hi, ${user.username} (Sign Out)`;
@@ -101,32 +99,26 @@ function updateUIState() {
         if(signupBtn) signupBtn.style.display = 'none';
 
     } else {
-        // --- กรณี: ยังไม่เข้าสู่ระบบ ---
         if(authBtn) authBtn.innerHTML = "Sign In";
         if(signupBtn) signupBtn.style.display = 'inline';
 
-        // 🌟 ปรับปรุงใหม่ 1: ดักจับการคลิกทุกลิงก์ที่พาไปหน้าอื่น เพื่อให้ "อยู่หน้าเดิม"
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
-            
-            // ถ้าลิงก์พาไปหน้าที่มี .html และไม่ใช่หน้า index.html (บล็อกทุกหน้ายกเว้นหน้าแรก)
             if (href && href.includes('.html') && !href.includes('index.html')) {
                 link.addEventListener('click', (e) => {
-                    e.preventDefault(); // 🛑 สั่งให้หยุด! ไม่ต้องโหลดเปลี่ยนหน้า (ให้อยู่หน้าเดิม)
+                    e.preventDefault(); 
                     alert("กรุณาเข้าสู่ระบบก่อนเข้าชมหน้านี้");
-                    $('#signinModal').modal('show'); // เปิดกล่องล็อกอินขึ้นมาให้ทันที
+                    $('#signinModal').modal('show'); 
                 });
             }
         });
 
-        // 🚨 ปรับปรุงใหม่ 2: ดักจับกรณีคนดื้อ "พิมพ์ URL" เข้าหน้าอื่นตรงๆ (เช่นพิมพ์ /cart.html เอง)
-        // เราจะเตือน แล้วใช้คำสั่งกดย้อนกลับ (Back) แทนการเตะกลับ index แบบดื้อๆ
         if (!isIndexPage) {
             alert("กรุณาเข้าสู่ระบบก่อนเข้าชมหน้านี้");
             if (window.history.length > 1) {
-                window.history.back(); // สั่งให้เบราว์เซอร์กดย้อนกลับไปหน้าเดิม
+                window.history.back(); 
             } else {
-                window.location.href = 'index.html'; // ถ้าเปิดแท็บใหม่เข้ามา ค่อยส่งไปหน้าแรก
+                window.location.href = 'index.html'; 
             }
         }
     }
@@ -134,11 +126,10 @@ function updateUIState() {
 
 async function handleSignUp(event) {
     event.preventDefault();
-    const form = event.target; // 🌟 ดึงฟอร์มที่คุณกำลังกดเป๊ะๆ
+    const form = event.target; 
     const btn = form.querySelector('button[type="submit"]');
     const alertBox = form.querySelector('.alert');
     
-    // ดึงค่า Input ตามลำดับที่อยู่ในฟอร์ม หมดปัญหา ID ชนกัน
     const inputs = form.querySelectorAll('input');
     const username = inputs[0].value.trim();
     const email = inputs[1].value.trim(); 
@@ -179,11 +170,10 @@ async function handleSignUp(event) {
 
 async function handleSignin(event) {
     event.preventDefault();
-    const form = event.target; // 🌟 ดึงฟอร์มที่คุณกำลังกดเป๊ะๆ
+    const form = event.target; 
     const btn = form.querySelector('button[type="submit"]');
     const alertBox = form.querySelector('.alert');
     
-    // ดึงค่า Input ตามลำดับ
     const inputs = form.querySelectorAll('input');
     const identifier = inputs[0].value.trim();
     const password = inputs[1].value.trim();
@@ -224,11 +214,14 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('signinForm')?.addEventListener('submit', handleSignin);
     document.getElementById('signupForm')?.addEventListener('submit', handleSignUp);
     
-    // ซ่อน Alert เมื่อเริ่มพิมพ์
+    // 🌟 ดักจับ Null Error อย่างสมบูรณ์
     document.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', (e) => {
-            const alertBox = e.target.closest('form').querySelector('.alert');
-            if (alertBox) alertBox.classList.add('d-none');
+            const form = e.target.closest('form');
+            if (form) { // ต้องมีเช็ค if (form) เสมอ เพื่อป้องกัน Error หน้าตาราง Cart
+                const alertBox = form.querySelector('.alert');
+                if (alertBox) alertBox.classList.add('d-none');
+            }
         });
     });
 });
