@@ -23,4 +23,64 @@
     "role": "customer",
     "createdAt": "2026-05-03T13:38:59.265Z"
   }
+
+ ,
+  {
+    "id": 4,
+    "username": "john_d",
+    "email": "john.doe@example.com",
+    "password": "test1234",
+    "role": "customer",
+    "createdAt": "2026-05-04T09:15:00.000Z"
+  },
+  {
+    "id": 5,
+    "username": "alice_w",
+    "email": "alice.w@example.com",
+    "password": "alicepwd",
+    "role": "customer",
+    "createdAt": "2026-05-04T09:30:00.000Z"
+  },
+  {
+    "id": 6,
+    "username": "bob_b",
+    "email": "bob.builder@example.com",
+    "password": "bob2026",
+    "role": "customer",
+    "createdAt": "2026-05-04T10:05:00.000Z"
+  },
+  {
+    "id": 7,
+    "username": "charlie_m",
+    "email": "charlie.m@example.com",
+    "password": "charlie99",
+    "role": "customer",
+    "createdAt": "2026-05-04T10:45:00.000Z"
+  },
+  {
+    "id": 8,
+    "username": "david_k",
+    "email": "david.k@example.com",
+    "password": "david123",
+    "role": "customer",
+    "createdAt": "2026-05-04T11:20:00.000Z"
+  },
+  {
+    "id": 9,
+    "username": "emma_s",
+    "email": "emma.s@example.com",
+    "password": "emmapass",
+    "role": "customer",
+    "createdAt": "2026-05-04T13:10:00.000Z"
+  },
+  {
+    "id": 10,
+    "username": "fiona_r",
+    "email": "fiona.r@example.com",
+    "password": "fiona456",
+    "role": "customer",
+    "createdAt": "2026-05-04T14:00:00.000Z"
+  }
+
+
 ]
