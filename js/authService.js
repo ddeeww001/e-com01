@@ -18,10 +18,11 @@ function renderAuthUI() {
                     <form id="signinForm">
                         <div class="modal-body pb-0">
                             <div id="signinAlert" class="alert d-none"></div>
-                            <div class="form-group">
-                                <label class="small text-muted">Email or Username</label>
-                                <input type="text" class="form-control py-4" placeholder="Enter email or username" required>
-                            </div>
+                            <!-- ใน authService.js ตรงส่วน #signinModal -->
+<div class="form-group">
+    <label class="small text-muted">Email Address</label>
+    <input type="email" class="form-control py-4" placeholder="Enter email" required>
+</div>
                             <div class="form-group">
                                 <label class="small text-muted">Password</label>
                                 <input type="password" class="form-control py-4" placeholder="••••••••" required>
@@ -178,7 +179,8 @@ async function handleSignin(event) {
     const alertBox = form.querySelector('.alert');
     
     const inputs = form.querySelectorAll('input');
-    const identifier = inputs[0].value.trim();
+    // เปลี่ยนจาก identifier เป็น email เพื่อให้ตรงกับ Backend
+    const email = inputs[0].value.trim();
     const password = inputs[1].value.trim();
 
     btn.disabled = true;
@@ -186,25 +188,31 @@ async function handleSignin(event) {
     alertBox.className = 'alert d-none';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/signin`, {
+        // เปลี่ยน Endpoint จาก /signin เป็น /login
+        const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identifier, password })
+            body: JSON.stringify({ email, password })
         });
+        
         const data = await response.json();
 
-        if (response.ok) {
+        // ตรวจสอบ HTTP Status ว่าเป็น 200 (สำเร็จ) หรือ 401 (Unauthorized)
+        if (response.status === 200) {
             localStorage.setItem('sunToken', data.token);
             localStorage.setItem('sunUser', JSON.stringify(data.user));
             $('#signinModal').modal('hide');
             window.location.reload(); 
-        } else {
+        } else if (response.status === 401) {
             alertBox.className = 'alert alert-danger';
-            alertBox.textContent = data.message;
+            alertBox.textContent = "อีเมลหรือรหัสผ่านไม่ถูกต้อง (Unauthorized)";
+        } else {
+            alertBox.className = 'alert alert-warning';
+            alertBox.textContent = data.message || "เกิดข้อผิดพลาด";
         }
     } catch (err) {
         alertBox.className = 'alert alert-danger';
-        alertBox.textContent = "เชื่อมต่อไม่ได้ กรุณาลองใหม่";
+        alertBox.textContent = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้";
     } finally {
         btn.disabled = false;
         btn.innerHTML = 'Sign In';

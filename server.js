@@ -72,18 +72,47 @@ app.post('/api/signup', async (req, res) => {
     } catch (err) { res.status(500).json({ message: "Server Error" }); }
 });
 
-app.post('/api/signin', async (req, res) => {
-    try {
-        const { identifier, password } = req.body;
-        const user = await db.get('SELECT * FROM users WHERE username = ? OR email = ?', [identifier, identifier]);
+// ==========================================
+// POST /api/login (Security Engineer Standard)
+// ==========================================
+app.post('/api/login', async (req, res) => {
+    // It should receive an email and a password.
+    const { email, password } = req.body;
 
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ message: "อีเมล/ชื่อผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง" });
+    if (!email || !password) {
+        return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+    }
+
+    try {
+        // Check if the email is not in my database, return 401 Unauthorized status.
+        const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+        
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
         }
 
-        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET, { expiresIn: '24h' });
-        res.json({ message: "เข้าสู่ระบบสำเร็จ", token, user: { id: user.id, username: user.username } });
-    } catch (err) { res.status(500).json({ message: "Server Error" }); }
+        // If it exists, use a library like bcrypt to compare the submitted password with a hashed one
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if (!isMatch) {
+            // Return 401 Unauthorized status if password doesn't match
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // If it matches, use jsonwebtoken to sign a token containing the user's ID.
+        const token = jwt.sign({ id: user.id }, SECRET, { expiresIn: '24h' });
+
+        // Return the token with a 200 status.
+        // (แนบข้อมูล user กลับไปนิดหน่อย เพื่อให้ authService.js หน้าบ้านเอาไปแสดงชื่อโปรไฟล์ได้)
+        return res.status(200).json({ 
+            token: token,
+            user: { id: user.id, username: user.username, email: user.email, role: user.role }
+        });
+
+    } catch (err) {
+        console.error("Login Route Error:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
 });
 
 // app.use('/api/products', require('./src/routes/productRoutes'));

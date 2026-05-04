@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "firstName": "Sun",
+    "username": "sun.test@gmail.com",
+    "password": "sun2026",
+    "registrationDate": "2026-05-01T08:30:00.000Z"
+  },
+  {
+    "id": 2,
+    "firstName": "John",
+    "username": "john.doe@example.com",
+    "password": "test1234",
+    "registrationDate": "2026-05-02T10:15:22.000Z"
+  },
+  {
+    "id": 3,
+    "firstName": "Alice",
+    "username": "alice.w@example.com",
+    "password": "alicepwd",
+    "registrationDate": "2026-05-02T14:45:10.000Z"
+  },
+  {
+    "id": 4,
+    "firstName": "Bob",
+    "username": "bob.builder@example.com",
+    "password": "bob2026",
+    "registrationDate": "2026-05-03T09:20:05.000Z"
+  },
+  {
+    "id": 5,
+    "firstName": "Charlie",
+    "username": "charlie.m@example.com",
+    "password": "charlie99",
+    "registrationDate": "2026-05-03T11:00:30.000Z"
+  },
+  {
+    "id": 6,
+    "firstName": "David",
+    "username": "david.k@example.com",
+    "password": "david123",
+    "registrationDate": "2026-05-03T16:30:45.000Z"
+  },
+  {
+    "id": 7,
+    "firstName": "Emma",
+    "username": "emma.s@example.com",
+    "password": "emmapass",
+    "registrationDate": "2026-05-04T08:05:12.000Z"
+  },
+  {
+    "id": 8,
+    "firstName": "Fiona",
+    "username": "fiona.r@example.com",
+    "password": "fiona456",
+    "registrationDate": "2026-05-04T09:12:33.000Z"
+  },
+  {
+    "id": 9,
+    "firstName": "George",
+    "username": "george.t@example.com",
+    "password": "george789",
+    "registrationDate": "2026-05-04T10:40:00.000Z"
+  },
+  {
+    "id": 10,
+    "firstName": "Hannah",
+    "username": "hannah.b@example.com",
+    "password": "hannah00",
+    "registrationDate": "2026-05-04T12:00:00.000Z"
+  }
+]
