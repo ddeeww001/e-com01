@@ -76,5 +76,21 @@
     "password": "$2b$10$yzG83M7lIQ6/SotjOtkaae8GGYSn7AetcYBhofq24zfXWi80VBmzu",
     "role": "customer",
     "createdAt": "2026-05-05T00:35:33.979Z"
+  },
+  {
+    "id": 12,
+    "username": "dew2",
+    "email": "king@gmal.com",
+    "password": "$2b$10$LcnQAwX0wsxrncbaCjn6FeRSS1Z90aY5Ki.7T35HU5e4BrYEAQGXe",
+    "role": "customer",
+    "createdAt": "2026-05-05T00:49:26.659Z"
+  },
+  {
+    "id": 13,
+    "username": "dew4",
+    "email": "k@gmail.com",
+    "password": "$2b$10$Ey3fmd8N5VxpI8VzSGPvregsUah41mOJ7D31/jBX/xKZ5DLNe8UXS",
+    "role": "customer",
+    "createdAt": "2026-05-05T00:50:26.846Z"
   }
 ]
