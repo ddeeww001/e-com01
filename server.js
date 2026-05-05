@@ -28,7 +28,7 @@ const authFile = path.join(dataDir, 'auth_user.json');
 // ==========================================
 // 🌟 Import Router ที่เราแยกไฟล์ไว้มาใช้งาน
 // ==========================================
-const authRoutes = require('./src/routers/register');
+const authRoutes = require('./src/routers/Express');
 
 // ใช้งาน Router โดยนำไปต่อที่ endpoint /api
 // (จะทำให้ได้ endpoint เป็น /api/signup และ /api/login เหมือนเดิมเป๊ะ)

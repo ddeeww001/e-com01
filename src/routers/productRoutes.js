@@ -1,4 +1,4 @@
-// ไฟล์: src/routes/productRoutes.js
+// ไฟล์: src/Express/productRoutes.js
 const express = require('express');
 const router = express.Router();
 const sqlite3 = require('sqlite3').verbose();

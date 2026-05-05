@@ -68,5 +68,13 @@
     "username": "hannah.b@example.com",
     "password": "hannah00",
     "registrationDate": "2026-05-04T12:00:00.000Z"
+  },
+  {
+    "id": 11,
+    "username": "dew",
+    "email": "dewthitirat@gmail.com",
+    "password": "$2b$10$yzG83M7lIQ6/SotjOtkaae8GGYSn7AetcYBhofq24zfXWi80VBmzu",
+    "role": "customer",
+    "createdAt": "2026-05-05T00:35:33.979Z"
   }
 ]
