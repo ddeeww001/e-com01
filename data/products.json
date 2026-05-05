@@ -8,7 +8,8 @@
     "price": 1490,
     "originalPrice": 1890,
     "badge": "Sale",
-    "badgeClass": "badge-danger"
+    "badgeClass": "badge-danger",
+    "stock": 10
   },
   {
     "id": 2,
@@ -18,7 +19,8 @@
     "imageUrl": "images/prod-2.jpg",
     "price": 990,
     "badge": "Best Seller",
-    "badgeClass": "badge-warning"
+    "badgeClass": "badge-warning",
+    "stock": 15
   },
   {
     "id": 3,
@@ -28,7 +30,8 @@
     "imageUrl": "images/prod-3.jpg",
     "price": 1250,
     "badge": "New Arrival",
-    "badgeClass": "badge-success"
+    "badgeClass": "badge-success",
+    "stock": 20
   },
   {
     "id": 4,
@@ -37,7 +40,8 @@
     "description": "A classic single malt Scotch whisky, smooth and fruity.",
     "imageUrl": "images/prod-4.jpg",
     "price": 2400,
-    "originalPrice": 2600
+    "originalPrice": 2600,
+    "stock": 10
   },
   {
     "id": 5,
@@ -45,7 +49,8 @@
     "category": "Whiskey",
     "description": "An iconic blend, recognized as the benchmark for all other deluxe blends.",
     "imageUrl": "images/prod-5.jpg",
-    "price": 1650
+    "price": 1650,
+    "stock": 15
   },
   {
     "id": 6,
@@ -55,7 +60,8 @@
     "imageUrl": "images/prod-6.jpg",
     "price": 3800,
     "badge": "Premium",
-    "badgeClass": "badge-dark"
+    "badgeClass": "badge-dark",
+    "stock": 10
   },
   {
     "id": 7,
@@ -66,7 +72,8 @@
     "price": 650,
     "originalPrice": 800,
     "badge": "Sale",
-    "badgeClass": "badge-danger"
+    "badgeClass": "badge-danger",
+    "stock": 10
   },
   {
     "id": 8,
@@ -74,7 +81,8 @@
     "category": "Whiskey",
     "description": "A blended Irish whiskey, triple-distilled for its signature smoothness.",
     "imageUrl": "images/prod-8.jpg",
-    "price": 1150
+    "price": 1150,
+    "stock": 10
   },
   {
     "id": 9,
@@ -82,7 +90,8 @@
     "category": "Brandy",
     "description": "A balanced and harmonious cognac expressing 200 years of craft.",
     "imageUrl": "images/kind-1.jpg",
-    "price": 3200
+    "price": 3200,
+    "stock": 10
   },
   {
     "id": 10,
@@ -92,7 +101,8 @@
     "imageUrl": "images/kind-4.jpg",
     "price": 2800,
     "badge": "Best Seller",
-    "badgeClass": "badge-warning"
+    "badgeClass": "badge-warning",
+    "stock": 10
   },
   {
     "id": 11,
@@ -100,7 +110,8 @@
     "category": "Vodka",
     "description": "A premium vodka produced in France using fine French wheat.",
     "imageUrl": "images/kind-5.jpg",
-    "price": 1850
+    "price": 1850,
+    "stock": 10
   },
   {
     "id": 12,
@@ -111,7 +122,8 @@
     "price": 1200,
     "originalPrice": 1400,
     "badge": "Sale",
-    "badgeClass": "badge-danger"
+    "badgeClass": "badge-danger",
+    "stock": 10
   },
   {
     "id": 13,
@@ -119,7 +131,8 @@
     "category": "Whiskey",
     "description": "Mellowed drop by drop through 10-feet of sugar maple charcoal.",
     "imageUrl": "images/prod-1.jpg",
-    "price": 1350
+    "price": 1350,
+    "stock": 10
   },
   {
     "id": 14,
@@ -129,7 +142,8 @@
     "imageUrl": "images/kind-4.jpg",
     "price": 8900,
     "badge": "Limited",
-    "badgeClass": "badge-info"
+    "badgeClass": "badge-info",
+    "stock": 10
   },
   {
     "id": 15,
@@ -137,7 +151,8 @@
     "category": "Rum",
     "description": "A smooth and medium-bodied rum with a secret blend of Caribbean spices.",
     "imageUrl": "images/kind-3.jpg",
-    "price": 750
+    "price": 750,
+    "stock": 10
   },
   {
     "id": 16,
@@ -148,7 +163,8 @@
     "price": 850,
     "originalPrice": 990,
     "badge": "Sale",
-    "badgeClass": "badge-danger"
+    "badgeClass": "badge-danger",
+    "stock": 10
   },
   {
     "id": 17,
@@ -156,7 +172,8 @@
     "category": "Gin",
     "description": "Infused with rose and cucumber for a truly unique flavor.",
     "imageUrl": "images/kind-2.jpg",
-    "price": 1950
+    "price": 1950,
+    "stock": 10
   },
   {
     "id": 18,
@@ -164,7 +181,8 @@
     "category": "Tequila",
     "description": "A golden-style joven tequila made from a blend of reposado and younger tequilas.",
     "imageUrl": "images/kind-4.jpg",
-    "price": 890
+    "price": 890,
+    "stock": 10
   },
   {
     "id": 19,
@@ -174,7 +192,8 @@
     "imageUrl": "images/kind-1.jpg",
     "price": 2900,
     "badge": "Top Rated",
-    "badgeClass": "badge-primary"
+    "badgeClass": "badge-primary",
+    "stock": 10
   },
   {
     "id": 20,
@@ -182,6 +201,7 @@
     "category": "Vodka",
     "description": "The world's first super premium vodka made from Polish rye.",
     "imageUrl": "images/kind-5.jpg",
-    "price": 2100
+    "price": 2100,
+    "stock": 10
   }
 ]
