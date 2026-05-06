@@ -51,16 +51,16 @@
         validateForm();
     }
 
-        // 2. UI Rendering
+    // 2. UI Rendering
     function renderOrderSummary(items) {
-        const summaryContainer = document.querySelector('.cart-total');
-        if (!summaryContainer) return;
+        const itemsListContainer = document.getElementById('order-items-list');
+        const subtotalEl = document.getElementById('summary-subtotal');
+        const totalEl = document.getElementById('summary-total');
+        
+        if (!itemsListContainer || !subtotalEl || !totalEl) return;
 
         let subtotal = 0;
-        
-        // Create Item List HTML
-        // เปลี่ยนหัวข้อจาก "สรุปรายการสั่งซื้อ" เป็น "Total" ตามคำขอ
-        let itemsHtml = '<h3 class="billing-heading mb-4">Total</h3>';
+        let itemsHtml = '';
         
         items.forEach(item => {
             const price = parseFloat(item.price) || 0;
@@ -79,29 +79,13 @@
             `;
         });
 
-        itemsHtml += `
-            <hr>
-            <p class="d-flex">
-                <span>Subtotal</span>
-                <span id="summary-subtotal" class="font-weight-bold">฿${subtotal.toLocaleString()}</span>
-            </p>
-            <p class="d-flex">
-                <span>Delivery</span>
-                <span>฿0</span>
-            </p>
-            <p class="d-flex">
-                <span>Discount</span>
-                <span>฿0</span>
-            </p>
-            <hr>
-            <p class="d-flex total-price">
-                <span class="font-weight-bold">Total</span>
-                <span id="summary-total" class="font-weight-bold text-primary" style="font-size: 20px;">฿${subtotal.toLocaleString()}</span>
-            </p>
-            <div id="stock-error" class="error-msg" style="margin-top: 15px;"></div>
-        `;
+        // ใส่รายการสินค้าลงใน Container
+        itemsListContainer.innerHTML = itemsHtml;
 
-        summaryContainer.innerHTML = itemsHtml;
+        // อัปเดตตัวเลขในจุดที่เตรียมไว้
+        subtotalEl.textContent = '฿' + subtotal.toLocaleString();
+        totalEl.textContent = '฿' + subtotal.toLocaleString();
+
         validateForm(); // รีเช็คปุ่มหลังจากเรนเดอร์ราคาเสร็จ
     }
 

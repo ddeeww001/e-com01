@@ -15,50 +15,49 @@ function renderAuthUI() {
                         <h5 class="modal-title font-weight-bold">Sign In</h5>
                         <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                     </div>
-                    <form id="signinForm">
-                        <div class="modal-body pb-0">
-                            <div id="signinAlert" class="alert d-none"></div>
-                            <!-- ใน authService.js ตรงส่วน #signinModal -->
-<div class="form-group">
-    <label class="small text-muted">Email Address</label>
-    <input type="email" class="form-control py-4" placeholder="Enter email" required>
-</div>
-                            <div class="form-group">
-                                <label class="small text-muted">Password</label>
-                                <input type="password" class="form-control py-4" placeholder="••••••••" required>
-                            </div>
+                            <form id="signinForm">
+                                <div class="modal-body pb-0">
+                                    <div id="signinAlert" class="alert d-none"></div>
+                                    <div class="form-group">
+                                        <label class="small text-muted">Email Address</label>
+                                        <input type="email" class="form-control py-4" placeholder="Enter email" autocomplete="username" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="small text-muted">Password</label>
+                                        <input type="password" class="form-control py-4" placeholder="••••••••" autocomplete="current-password" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 px-4 pb-4">
+                                    <button type="submit" id="signinSubmitBtn" class="btn btn-primary btn-block py-3">Sign In</button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="modal-footer border-0 px-4 pb-4">
-                            <button type="submit" id="signinSubmitBtn" class="btn btn-primary btn-block py-3">Sign In</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!-- Sign Up Modal -->
-        <div class="modal fade custom-modal" id="signupModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content p-3">
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title font-weight-bold">Create Account</h5>
-                        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                     </div>
-                    <form id="signupForm">
-                        <div class="modal-body pb-0">
-                            <div id="signupAlert" class="alert d-none"></div>
-                            <div class="form-group">
-                                <label class="small text-muted">Username</label>
-                                <input type="text" class="form-control py-4" required>
+                </div>
+                <!-- Sign Up Modal -->
+                <div class="modal fade custom-modal" id="signupModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content p-3">
+                            <div class="modal-header border-0">
+                                <h5 class="modal-title font-weight-bold">Create Account</h5>
+                                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                             </div>
-                            <div class="form-group">
-                                <label class="small text-muted">Email Address</label>
-                                <input type="email" class="form-control py-4" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="small text-muted">Password</label>
-                                <input type="password" class="form-control py-4" required>
-                            </div>
-                        </div>
+                            <form id="signupForm">
+                                <div class="modal-body pb-0">
+                                    <div id="signupAlert" class="alert d-none"></div>
+                                    <div class="form-group">
+                                        <label class="small text-muted">Username</label>
+                                        <input type="text" class="form-control py-4" autocomplete="username" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="small text-muted">Email Address</label>
+                                        <input type="email" class="form-control py-4" autocomplete="email" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="small text-muted">Password</label>
+                                        <input type="password" class="form-control py-4" autocomplete="new-password" required>
+                                    </div>
+                                </div>
                         <div class="modal-footer border-0 px-4 pb-4">
                             <button type="submit" id="signupSubmitBtn" class="btn btn-primary btn-block py-3">Sign Up</button>
                         </div>
@@ -315,6 +314,10 @@ const updateUI = () => {
 
 // 6. ระบบคำนวณราคาก่อนชำระเงิน
 const calculateCheckoutTotal = () => {
+    // 🌟 ดักจับ: ถ้าไม่มีตารางตะกร้า (เช่นหน้า Checkout) ไม่ต้องคำนวณทับ
+    const tbody = document.querySelector('.table tbody');
+    if (!tbody) return;
+
     let subtotal = 0;
     
     const cartRows = document.querySelectorAll('.table tbody tr.alert');
