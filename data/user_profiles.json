@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "username": "sun",
+    "firstname": "Sun",
+    "lastname": "Developer",
+    "country": "Thailand",
+    "streetaddress": "123 Gemini Street",
+    "apartment": "Suite 404",
+    "towncity": "Bangkok",
+    "postcodezip": "10110",
+    "phone": "0812345678",
+    "emailaddress": "sun@example.com"
+  }
+]

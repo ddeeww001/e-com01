@@ -25,13 +25,16 @@ const authFile = path.join(dataDir, 'auth_user.json');
     }
 })();
 
+
 // ==========================================
 // 🌟 Import Router ที่เราแยกไฟล์ไว้มาใช้งาน
 // ==========================================
 const authRoutes = require('./src/routers/Express');
+const checkoutRoutes = require('./src/routers/checkout');
 
 // ใช้งาน Router โดยนำไปต่อที่ endpoint /api
 // (จะทำให้ได้ endpoint เป็น /api/signup และ /api/login เหมือนเดิมเป๊ะ)
 app.use('/api', authRoutes);
+app.use('/api/checkout', checkoutRoutes);
 
 app.listen(3000, () => console.log('🚀 Server is running on port 3000'));

@@ -40,6 +40,8 @@ function init() {
     // We are using a div with id="map" seen below in the <body>
     var mapElement = document.getElementById('map');
 
+    if (!mapElement) return; // 🌟 ป้องกัน Error หากหน้าเว็บไม่มี Element #map
+
     // Create the Google Map using out element and options defined above
     var map = new google.maps.Map(mapElement, mapOptions);
     
