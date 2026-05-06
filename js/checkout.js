@@ -21,6 +21,8 @@
             return;
         }
 
+        const user = JSON.parse(userString);
+
         // Load Order Summary from Session Storage
         const pendingData = sessionStorage.getItem('pendingCheckout');
         if (!pendingData) {
@@ -32,23 +34,43 @@
         const items = JSON.parse(pendingData);
         renderOrderSummary(items);
 
-        // Auto-fill Profile
+        // 🌟 Auto-fill Profile (From Server First, then LocalStorage Fallback)
         try {
+            // ดึงจากเซิร์ฟเวอร์
             const response = await fetch(`${CHECKOUT_API_URL}/profile`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const profile = await response.json();
             
-            if (profile) {
-                const fields = ['firstname', 'lastname', 'country', 'streetaddress', 'apartment', 'towncity', 'postcodezip', 'phone', 'emailaddress'];
-                fields.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = profile[id] || '';
-                });
-            }
+            // ดึงจาก LocalStorage (เผื่อกรอกค้างไว้แต่ยังไม่ได้กดสั่ง)
+            const localProfile = JSON.parse(localStorage.getItem(`temp_profile_${user.username}`)) || {};
+
+            const fields = ['firstname', 'lastname', 'country', 'streetaddress', 'apartment', 'towncity', 'postcodezip', 'phone', 'emailaddress'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    // ลำดับความสำคัญ: ข้อมูลจากเซิร์ฟเวอร์ > ข้อมูลที่พิมพ์ค้างไว้ > ว่างเปล่า
+                    el.value = profile[id] || localProfile[id] || '';
+                }
+            });
         } catch (err) { console.error("Profile load error:", err); }
         
         validateForm();
+    }
+
+    // 🌟 1.5 Save to LocalStorage while typing
+    function saveToLocal() {
+        const userString = localStorage.getItem('sunUser');
+        if (!userString) return;
+        const user = JSON.parse(userString);
+
+        const profileData = {};
+        ['firstname', 'lastname', 'country', 'streetaddress', 'apartment', 'towncity', 'postcodezip', 'phone', 'emailaddress'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) profileData[id] = el.value;
+        });
+
+        localStorage.setItem(`temp_profile_${user.username}`, JSON.stringify(profileData));
     }
 
     // 2. UI Rendering
@@ -202,7 +224,7 @@
                             <h5 class="mb-1 text-primary">ยอดชำระทั้งสิ้น</h5>
                             <h3 class="mb-0">฿${result.totalAmount.toLocaleString()}</h3>
                         </div>
-                        <a href="index.html" class="btn btn-primary px-5 py-3 mt-3">กลับสู่หน้าหลัก</a>
+                        <button onclick="window.location.href='index.html'" class="btn btn-primary px-5 py-3 mt-3">กลับสู่หน้าหลัก</button>
                     </div>
                 `;
                 
@@ -261,7 +283,10 @@
         });
 
         document.querySelectorAll('.billing-form input, #terms-check, #creditCardNumber').forEach(input => {
-            input.addEventListener('input', validateForm);
+            input.addEventListener('input', () => {
+                validateForm();
+                saveToLocal(); // 🌟 บันทึกข้อมูลลง LocalStorage ทันทีที่พิมพ์
+            });
         });
 
         document.getElementById('placeOrderBtn')?.addEventListener('click', handlePlaceOrder);

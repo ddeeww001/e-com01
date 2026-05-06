@@ -76,12 +76,12 @@ const handleSearchAndFilter = () => {
 // 3. โหลดข้อมูลเริ่มต้นและผูก Event
 const initStore = async () => {
     try {
-        // ดึงข้อมูลจาก Node.js Backend API
-        const response = await fetch('http://localhost:3000/api/products');
+        // ดึงข้อมูลจากไฟล์ JSON โดยตรงพร้อม Timestamp เพื่อให้เห็นการอัปเดตสต็อกทันที
+        const response = await fetch('data/products.json?t=' + Date.now());
         if (!response.ok) throw new Error("API Error");
         allProducts = await response.json();
     } catch (error) {
-        console.warn('ไม่สามารถเชื่อมต่อ Backend API ได้ จะใช้ข้อมูลจากไฟล์ JSON แทน');
+        console.warn('ไม่สามารถโหลดข้อมูลสินค้าได้ จะลองใช้ไฟล์สำรอง');
         const fallback = await fetch('data/products.json');
         allProducts = await fallback.json();
     }

@@ -4,7 +4,7 @@
 
     // เราจะไม่ใช้ container.innerHTML = 'Loading...' แล้ว เพราะจะไปทับสินค้า Hardcode เดิม
 
-    fetch('data/products.json')
+    fetch('data/products.json?t=' + Date.now())
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -29,7 +29,7 @@
                             <div class="img d-flex align-items-center justify-content-center" style="background-image: url(${product.imageUrl}); height: 300px; background-size: cover; background-position: center;">
                                 <div class="desc">
                                     <p class="meta-prod d-flex">
-                                        <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-shopping-bag"></span></a>
+                                        <a href="#" class="add-to-cart d-flex align-items-center justify-content-center" data-id="${product.id}"><span class="flaticon-shopping-bag"></span></a>
                                         <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-heart"></span></a>
                                         <a href="#" class="d-flex align-items-center justify-content-center"><span class="flaticon-visibility"></span></a>
                                     </p>

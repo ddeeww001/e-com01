@@ -3,11 +3,43 @@ const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
 
 const PRODUCTS_FILE = path.join(__dirname, '../../data/products.json');
 const USER_PROFILE_FILE = path.join(__dirname, '../../data/user_profiles.json');
 const ORDER_HISTORY_FILE = path.join(__dirname, '../../data/order_history.json');
+const DB_FILE = path.join(__dirname, '../../database.sqlite');
 const SECRET = "SUN_PRO_SECURE_KEY_2026";
+
+// 🌟 ฟังก์ชันจัดการฐานข้อมูล SQLite
+async function getDB() {
+    return open({
+        filename: DB_FILE,
+        driver: sqlite3.Database
+    });
+}
+
+// 🌟 สร้างตาราง Orders หากยังไม่มี
+(async () => {
+    try {
+        const db = await getDB();
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                product_id INTEGER,
+                quantity INTEGER,
+                total_price REAL,
+                order_id TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log("✅ ตาราง orders ใน SQLite พร้อมใช้งาน");
+    } catch (err) {
+        console.error("❌ ไม่สามารถสร้างตาราง SQLite ได้:", err);
+    }
+})();
 
 // Middleware: Auth Guard
 function authGuard(req, res, next) {
@@ -51,7 +83,7 @@ router.post('/calculate-total', authGuard, async (req, res) => {
 });
 
 // POST /api/checkout/place-order
-// 🌟 Phase 3: Validation Logic + Total Calculation + Stock Cutting
+// 🌟 Phase 3: SQLite Storage + Stock Cutting
 router.post('/place-order', authGuard, async (req, res) => {
     const { cart, profile, paymentMethod, creditCardNumber } = req.body;
     
@@ -72,7 +104,6 @@ router.post('/place-order', authGuard, async (req, res) => {
         }
 
         // 3. Payment Validation (Credit Card 16 digits)
-        // ตรวจสอบเฉพาะกรณีเลือกชำระผ่านบัตรเครดิต (Card Payment)
         if (paymentMethod === 'card') {
             const cardRegex = /^\d{16}$/;
             if (!creditCardNumber || !cardRegex.test(creditCardNumber)) {
@@ -80,10 +111,11 @@ router.post('/place-order', authGuard, async (req, res) => {
             }
         }
 
-        // 4. Products & Stock Validation + Server-side Calculation
+        // 4. Products & Stock Validation
         let products = JSON.parse(await fs.readFile(PRODUCTS_FILE, 'utf8'));
         let totalAmount = 0;
         const stockErrors = [];
+        const validatedItems = [];
 
         for (const item of cart) {
             const prod = products.find(p => p.id === (item.id || item.productId));
@@ -92,12 +124,15 @@ router.post('/place-order', authGuard, async (req, res) => {
                 continue;
             }
 
-            // ตรวจสอบสต็อก
             if (prod.stock_quantity < item.quantity) {
                 stockErrors.push(`สินค้า "${prod.title}" มีสต็อกไม่เพียงพอ (คงเหลือ: ${prod.stock_quantity})`);
             } else {
-                // คำนวณราคากลางจากเซิร์ฟเวอร์ (Security Requirement)
                 totalAmount += prod.price * item.quantity;
+                validatedItems.push({
+                    productId: prod.id,
+                    quantity: item.quantity,
+                    totalPrice: prod.price * item.quantity
+                });
             }
         }
 
@@ -105,13 +140,11 @@ router.post('/place-order', authGuard, async (req, res) => {
             errors.stock = stockErrors.join(', ');
         }
 
-        // 5. Check for any validation errors
         if (Object.keys(errors).length > 0) {
-            // ส่งกลับสถานะ 400 พร้อมรายละเอียด Error แยกตามฟิลด์
             return res.status(400).json({ error: errors });
         }
 
-        // 6. Success Logic: Stock Deduction (Stock Cutting)
+        // 5. Stock Deduction
         products = products.map(p => {
             const item = cart.find(i => (i.id || i.productId) === p.id);
             if (item) {
@@ -121,39 +154,24 @@ router.post('/place-order', authGuard, async (req, res) => {
         });
         await fs.writeFile(PRODUCTS_FILE, JSON.stringify(products, null, 2));
 
-        // 7. Save Order History
-        let history = [];
-        try {
-            const historyContent = await fs.readFile(ORDER_HISTORY_FILE, 'utf8');
-            history = JSON.parse(historyContent);
-        } catch (e) { history = []; }
-
+        // 6. 🌟 Save Order to SQLite
+        const db = await getDB();
         const orderId = "ORD-" + Date.now() + Math.floor(Math.random() * 1000);
-        const newOrder = {
-            orderId,
-            userId: req.user.id,
-            username: req.user.username || profile.username || 'Guest', // ใช้ชื่อจาก Token หรือ Profile
-            email: profile.emailaddress,
-            items: cart.map(item => {
-                const p = products.find(prod => prod.id === (item.id || item.productId));
-                return {
-                    id: p.id,
-                    title: p.title,
-                    price: p.price,
-                    quantity: item.quantity
-                };
-            }),
-            totalAmount,
-            profile,
-            paymentMethod,
-            timestamp: new Date().toISOString(),
-            status: 'completed'
-        };
         
-        history.push(newOrder);
-        await fs.writeFile(ORDER_HISTORY_FILE, JSON.stringify(history, null, 2));
+        // บันทึกแต่ละรายการลงในฐานข้อมูล
+        const insertStmt = "INSERT INTO orders (user_id, product_id, quantity, total_price, order_id) VALUES (?, ?, ?, ?, ?)";
+        
+        for (const item of validatedItems) {
+            await db.run(insertStmt, [
+                req.user.id,
+                item.productId,
+                item.quantity,
+                item.totalPrice,
+                orderId
+            ]);
+        }
 
-        // 8. Auto-update User Profile for next time
+        // 7. Auto-update User Profile for next time
         let profiles = [];
         try {
             profiles = JSON.parse(await fs.readFile(USER_PROFILE_FILE, 'utf8'));
@@ -170,7 +188,7 @@ router.post('/place-order', authGuard, async (req, res) => {
             success: true, 
             orderId, 
             totalAmount,
-            message: 'Order placed successfully' 
+            message: 'บันทึกคำสั่งซื้อลงระบบ SQLite เรียบร้อยแล้ว' 
         });
 
     } catch (err) {
@@ -181,12 +199,42 @@ router.post('/place-order', authGuard, async (req, res) => {
     }
 });
 
+// GET /api/checkout/profile
 router.get('/profile', authGuard, async (req, res) => {
     try {
         const profiles = JSON.parse(await fs.readFile(USER_PROFILE_FILE, 'utf8'));
-        const profile = profiles.find(p => p.userId === req.user.id);
+        // 🌟 ค้นหาด้วย userId (แนะนำ) หรือ username (fallback)
+        const profile = profiles.find(p => p.userId === req.user.id || (p.username && p.username === req.user.username));
         res.json(profile || {});
     } catch { res.json({}); }
+});
+
+// POST /api/checkout/save-profile
+// 🌟 เพิ่ม Endpoint ใหม่สำหรับบันทึกข้อมูล Profile แยกต่างหาก (ไม่ต้องสั่งซื้อก็บันทึกได้)
+router.post('/save-profile', authGuard, async (req, res) => {
+    const { profile } = req.body;
+    if (!profile) return res.status(400).json({ message: 'ไม่มีข้อมูล Profile' });
+
+    try {
+        let profiles = [];
+        try {
+            profiles = JSON.parse(await fs.readFile(USER_PROFILE_FILE, 'utf8'));
+        } catch { profiles = []; }
+
+        const pIdx = profiles.findIndex(p => p.userId === req.user.id);
+        const profileToSave = { ...profile, userId: req.user.id, updatedAt: new Date().toISOString() };
+
+        if (pIdx >= 0) {
+            profiles[pIdx] = { ...profiles[pIdx], ...profileToSave };
+        } else {
+            profiles.push(profileToSave);
+        }
+
+        await fs.writeFile(USER_PROFILE_FILE, JSON.stringify(profiles, null, 2));
+        res.json({ success: true, message: 'บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว' });
+    } catch (err) {
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+    }
 });
 
 module.exports = router;

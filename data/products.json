@@ -31,7 +31,7 @@
     "price": 1250,
     "badge": "New Arrival",
     "badgeClass": "badge-success",
-    "stock_quantity": 20
+    "stock_quantity": 16
   },
   {
     "id": 4,
@@ -41,7 +41,7 @@
     "imageUrl": "images/prod-4.jpg",
     "price": 2400,
     "originalPrice": 2600,
-    "stock_quantity": 10
+    "stock_quantity": 8
   },
   {
     "id": 5,
@@ -50,7 +50,7 @@
     "description": "An iconic blend, recognized as the benchmark for all other deluxe blends.",
     "imageUrl": "images/prod-5.jpg",
     "price": 1650,
-    "stock_quantity": 15
+    "stock_quantity": 14
   },
   {
     "id": 6,
@@ -73,7 +73,7 @@
     "originalPrice": 800,
     "badge": "Sale",
     "badgeClass": "badge-danger",
-    "stock_quantity": 10
+    "stock_quantity": 0
   },
   {
     "id": 8,
@@ -82,7 +82,7 @@
     "description": "A blended Irish whiskey, triple-distilled for its signature smoothness.",
     "imageUrl": "images/prod-8.jpg",
     "price": 1150,
-    "stock_quantity": 10
+    "stock_quantity": 9
   },
   {
     "id": 9,
@@ -135,7 +135,8 @@
     "stock_quantity": 10
   },
   {
-    "id": 14, "title": "Don Julio 1942",
+    "id": 14,
+    "title": "Don Julio 1942",
     "category": "Tequila",
     "description": "An exquisite Añejo tequila created in small batches.",
     "imageUrl": "images/kind-4.jpg",
@@ -181,7 +182,7 @@
     "description": "A golden-style joven tequila made from a blend of reposado and younger tequilas.",
     "imageUrl": "images/kind-4.jpg",
     "price": 890,
-    "stock_quantity": 10
+    "stock_quantity": 8
   },
   {
     "id": 19,

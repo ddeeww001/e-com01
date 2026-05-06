@@ -92,5 +92,13 @@
     "password": "$2b$10$Ey3fmd8N5VxpI8VzSGPvregsUah41mOJ7D31/jBX/xKZ5DLNe8UXS",
     "role": "customer",
     "createdAt": "2026-05-05T00:50:26.846Z"
+  },
+  {
+    "id": 14,
+    "username": "d",
+    "email": "d@gmail.com",
+    "password": "$2b$10$zJ8NZq/yC38iSUQtvNvMs.6nLOzAfpDmrw7NO9ri1jf27O0RRoawK",
+    "role": "customer",
+    "createdAt": "2026-05-06T07:48:14.868Z"
   }
 ]
