@@ -1,45 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs').promises;
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 
-const PRODUCTS_FILE = path.join(__dirname, '../../data/products.json');
-const USER_PROFILE_FILE = path.join(__dirname, '../../data/user_profiles.json');
-const ORDER_HISTORY_FILE = path.join(__dirname, '../../data/order_history.json');
-const DB_FILE = path.join(__dirname, '../../database.sqlite');
+const DB_FILE = path.join(__dirname, '../../data/products.db');
 const SECRET = "SUN_PRO_SECURE_KEY_2026";
 
-// 🌟 ฟังก์ชันจัดการฐานข้อมูล SQLite
+// 🌟 ฟังก์ชันจัดการฐานข้อมูล SQLite (Unified DB)
 async function getDB() {
     return open({
         filename: DB_FILE,
         driver: sqlite3.Database
     });
 }
-
-// 🌟 สร้างตาราง Orders หากยังไม่มี
-(async () => {
-    try {
-        const db = await getDB();
-        await db.exec(`
-            CREATE TABLE IF NOT EXISTS orders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                product_id INTEGER,
-                quantity INTEGER,
-                total_price REAL,
-                order_id TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        console.log("✅ ตาราง orders ใน SQLite พร้อมใช้งาน");
-    } catch (err) {
-        console.error("❌ ไม่สามารถสร้างตาราง SQLite ได้:", err);
-    }
-})();
 
 // Middleware: Auth Guard
 function authGuard(req, res, next) {
@@ -62,179 +37,151 @@ router.post('/calculate-total', authGuard, async (req, res) => {
     if (!Array.isArray(cart)) return res.status(400).json({ message: 'Invalid cart' });
 
     try {
-        const productsData = JSON.parse(await fs.readFile(PRODUCTS_FILE, 'utf8'));
+        const db = await getDB();
         let total = 0;
-        const validation = cart.map(item => {
-            const product = productsData.find(p => p.id === item.productId);
-            if (!product) return { productId: item.productId, error: 'Not found' };
+        const validation = [];
+
+        for (const item of cart) {
+            const product = await db.get('SELECT * FROM products WHERE id = ?', [item.productId]);
+            if (!product) {
+                validation.push({ productId: item.productId, error: 'Not found' });
+                continue;
+            }
             
             const isAvailable = product.stock_quantity >= item.quantity;
             if (isAvailable) {
                 total += product.price * item.quantity;
             }
-            return {
+            validation.push({
                 productId: item.productId,
                 available: isAvailable,
                 currentStock: product.stock_quantity
-            };
-        });
+            });
+        }
         res.json({ total, validation });
     } catch (err) { res.status(500).json({ message: 'Calculation error' }); }
 });
 
 // POST /api/checkout/place-order
-// 🌟 Phase 3: SQLite Storage + Stock Cutting
 router.post('/place-order', authGuard, async (req, res) => {
     const { cart, profile, paymentMethod, creditCardNumber } = req.body;
     
-    // 1. Initial Data Check
     if (!Array.isArray(cart) || cart.length === 0 || !profile) {
-        return res.status(400).json({ 
-            error: { general: 'ข้อมูลการสั่งซื้อไม่สมบูรณ์ หรือตะกร้าว่างเปล่า' } 
-        });
+        return res.status(400).json({ error: { general: 'ข้อมูลการสั่งซื้อไม่สมบูรณ์' } });
     }
 
     const errors = {};
+    const db = await getDB();
 
     try {
-        // 2. Email Validation (Regex)
+        // Validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!profile.emailaddress || !emailRegex.test(profile.emailaddress)) {
-            errors.email = "รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง";
+            errors.email = "รูปแบบอีเมลไม่ถูกต้อง";
         }
 
-        // 3. Payment Validation (Credit Card 16 digits)
         if (paymentMethod === 'card') {
-            const cardRegex = /^\d{16}$/;
-            if (!creditCardNumber || !cardRegex.test(creditCardNumber)) {
-                errors.payment = "หมายเลขบัตรเครดิตต้องเป็นตัวเลข 16 หลักเท่านั้น";
+            if (!creditCardNumber || !/^\d{16}$/.test(creditCardNumber)) {
+                errors.payment = "หมายเลขบัตรเครดิตต้องมี 16 หลัก";
             }
         }
 
-        // 4. Products & Stock Validation
-        let products = JSON.parse(await fs.readFile(PRODUCTS_FILE, 'utf8'));
         let totalAmount = 0;
         const stockErrors = [];
-        const validatedItems = [];
+        const itemsToProcess = [];
 
         for (const item of cart) {
-            const prod = products.find(p => p.id === (item.id || item.productId));
+            const prod = await db.get('SELECT * FROM products WHERE id = ?', [item.id || item.productId]);
             if (!prod) {
                 stockErrors.push(`ไม่พบสินค้า ID: ${item.id || item.productId}`);
                 continue;
             }
 
             if (prod.stock_quantity < item.quantity) {
-                stockErrors.push(`สินค้า "${prod.title}" มีสต็อกไม่เพียงพอ (คงเหลือ: ${prod.stock_quantity})`);
+                stockErrors.push(`สินค้า "${prod.title}" สต็อกไม่พอ`);
             } else {
-                totalAmount += prod.price * item.quantity;
-                validatedItems.push({
-                    productId: prod.id,
-                    quantity: item.quantity,
-                    totalPrice: prod.price * item.quantity
-                });
+                const itemTotal = prod.price * item.quantity;
+                totalAmount += itemTotal;
+                itemsToProcess.push({ ...prod, orderQty: item.quantity, itemTotal });
             }
         }
 
-        if (stockErrors.length > 0) {
-            errors.stock = stockErrors.join(', ');
+        if (stockErrors.length > 0) errors.stock = stockErrors.join(', ');
+        if (Object.keys(errors).length > 0) return res.status(400).json({ error: errors });
+
+        // Transactional logic (simplified)
+        const orderId = "ORD-" + Date.now();
+        
+        for (const item of itemsToProcess) {
+            // 1. Cut Stock
+            await db.run('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?', [item.orderQty, item.id]);
+            // 2. Save Order Item
+            await db.run('INSERT INTO orders (user_id, product_id, quantity, total_price, order_id) VALUES (?, ?, ?, ?, ?)', 
+                [req.user.id, item.id, item.orderQty, item.itemTotal, orderId]);
         }
 
-        if (Object.keys(errors).length > 0) {
-            return res.status(400).json({ error: errors });
+        // 3. Update Profile
+        const existingProfile = await db.get('SELECT id FROM profiles WHERE userId = ?', [req.user.id]);
+        const profileData = [
+            req.user.id, req.user.username, profile.firstname, profile.lastname, profile.country,
+            profile.streetaddress, profile.apartment, profile.towncity, profile.postcodezip,
+            profile.phone, profile.emailaddress, new Date().toISOString()
+        ];
+
+        if (existingProfile) {
+            await db.run(`UPDATE profiles SET 
+                username=?, firstname=?, lastname=?, country=?, streetaddress=?, 
+                apartment=?, towncity=?, postcodezip=?, phone=?, emailaddress=?, updatedAt=? 
+                WHERE userId=?`, [...profileData.slice(1), req.user.id]);
+        } else {
+            await db.run(`INSERT INTO profiles 
+                (userId, username, firstname, lastname, country, streetaddress, apartment, towncity, postcodezip, phone, emailaddress, updatedAt) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, profileData);
         }
 
-        // 5. Stock Deduction
-        products = products.map(p => {
-            const item = cart.find(i => (i.id || i.productId) === p.id);
-            if (item) {
-                return { ...p, stock_quantity: p.stock_quantity - item.quantity };
-            }
-            return p;
-        });
-        await fs.writeFile(PRODUCTS_FILE, JSON.stringify(products, null, 2));
-
-        // 6. 🌟 Save Order to SQLite
-        const db = await getDB();
-        const orderId = "ORD-" + Date.now() + Math.floor(Math.random() * 1000);
-        
-        // บันทึกแต่ละรายการลงในฐานข้อมูล
-        const insertStmt = "INSERT INTO orders (user_id, product_id, quantity, total_price, order_id) VALUES (?, ?, ?, ?, ?)";
-        
-        for (const item of validatedItems) {
-            await db.run(insertStmt, [
-                req.user.id,
-                item.productId,
-                item.quantity,
-                item.totalPrice,
-                orderId
-            ]);
-        }
-
-        // 7. Auto-update User Profile for next time
-        let profiles = [];
-        try {
-            profiles = JSON.parse(await fs.readFile(USER_PROFILE_FILE, 'utf8'));
-        } catch { profiles = []; }
-        
-        const pIdx = profiles.findIndex(p => p.userId === req.user.id);
-        const profileToSave = { ...profile, userId: req.user.id };
-        if (pIdx >= 0) profiles[pIdx] = profileToSave;
-        else profiles.push(profileToSave);
-        await fs.writeFile(USER_PROFILE_FILE, JSON.stringify(profiles, null, 2));
-
-        // Return success response
-        res.json({ 
-            success: true, 
-            orderId, 
-            totalAmount,
-            message: 'บันทึกคำสั่งซื้อลงระบบ SQLite เรียบร้อยแล้ว' 
-        });
+        res.json({ success: true, orderId, totalAmount, message: 'บันทึกคำสั่งซื้อเรียบร้อย' });
 
     } catch (err) {
-        console.error("Checkout Error:", err);
-        res.status(500).json({ 
-            error: { general: 'เกิดข้อผิดพลาดภายในระบบเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง' } 
-        });
+        console.error(err);
+        res.status(500).json({ error: { general: 'Server Error' } });
     }
 });
 
 // GET /api/checkout/profile
 router.get('/profile', authGuard, async (req, res) => {
     try {
-        const profiles = JSON.parse(await fs.readFile(USER_PROFILE_FILE, 'utf8'));
-        // 🌟 ค้นหาด้วย userId (แนะนำ) หรือ username (fallback)
-        const profile = profiles.find(p => p.userId === req.user.id || (p.username && p.username === req.user.username));
+        const db = await getDB();
+        const profile = await db.get('SELECT * FROM profiles WHERE userId = ? OR username = ?', [req.user.id, req.user.username]);
         res.json(profile || {});
     } catch { res.json({}); }
 });
 
 // POST /api/checkout/save-profile
-// 🌟 เพิ่ม Endpoint ใหม่สำหรับบันทึกข้อมูล Profile แยกต่างหาก (ไม่ต้องสั่งซื้อก็บันทึกได้)
 router.post('/save-profile', authGuard, async (req, res) => {
     const { profile } = req.body;
-    if (!profile) return res.status(400).json({ message: 'ไม่มีข้อมูล Profile' });
+    if (!profile) return res.status(400).json({ message: 'ไม่มีข้อมูล' });
 
     try {
-        let profiles = [];
-        try {
-            profiles = JSON.parse(await fs.readFile(USER_PROFILE_FILE, 'utf8'));
-        } catch { profiles = []; }
+        const db = await getDB();
+        const profileData = [
+            req.user.id, req.user.username, profile.firstname, profile.lastname, profile.country,
+            profile.streetaddress, profile.apartment, profile.towncity, profile.postcodezip,
+            profile.phone, profile.emailaddress, new Date().toISOString()
+        ];
 
-        const pIdx = profiles.findIndex(p => p.userId === req.user.id);
-        const profileToSave = { ...profile, userId: req.user.id, updatedAt: new Date().toISOString() };
-
-        if (pIdx >= 0) {
-            profiles[pIdx] = { ...profiles[pIdx], ...profileToSave };
+        const existing = await db.get('SELECT id FROM profiles WHERE userId = ?', [req.user.id]);
+        if (existing) {
+            await db.run(`UPDATE profiles SET 
+                username=?, firstname=?, lastname=?, country=?, streetaddress=?, 
+                apartment=?, towncity=?, postcodezip=?, phone=?, emailaddress=?, updatedAt=? 
+                WHERE userId=?`, [...profileData.slice(1), req.user.id]);
         } else {
-            profiles.push(profileToSave);
+            await db.run(`INSERT INTO profiles 
+                (userId, username, firstname, lastname, country, streetaddress, apartment, towncity, postcodezip, phone, emailaddress, updatedAt) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, profileData);
         }
-
-        await fs.writeFile(USER_PROFILE_FILE, JSON.stringify(profiles, null, 2));
-        res.json({ success: true, message: 'บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว' });
-    } catch (err) {
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
-    }
+        res.json({ success: true, message: 'บันทึกเรียบร้อย' });
+    } catch (err) { res.status(500).json({ message: 'Error' }); }
 });
 
 module.exports = router;
