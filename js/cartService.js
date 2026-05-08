@@ -15,8 +15,8 @@
     // 1. Initial Load
     async function initCart() {
         try {
-            const response = await fetch('data/products.json');
-            if (!response.ok) throw new Error("Failed to load products.json");
+            const response = await fetch('http://localhost:3000/api/products');
+            if (!response.ok) throw new Error("Failed to load products from API");
             products = await response.json();
             
             // Filter out IDs that are no longer in the cart
@@ -59,6 +59,42 @@
         if (badge) {
             const totalQty = cart.reduce((sum, i) => sum + i.quantity, 0);
             badge.textContent = totalQty;
+        }
+
+        // --- Update Navbar Dropdown ---
+        const dropdownMenu = document.querySelector('.dropdown-menu-right');
+        if (dropdownMenu) {
+            const dropdownDetails = cart.map(c => {
+                const prod = products.find(p => p.id === c.productId);
+                return prod ? { ...prod, qty: c.quantity } : null;
+            }).filter(i => i !== null);
+
+            let dropdownHTML = '';
+            if (dropdownDetails.length === 0) {
+                dropdownHTML = '<div class="dropdown-item text-center">ไม่มีสินค้าในตะกร้า</div>';
+            } else {
+                dropdownHTML = dropdownDetails.slice(0, 3).map(i => `
+                    <div class="dropdown-item d-flex align-items-start">
+                        <div class="img" style="background-image: url(${i.imageUrl});"></div>
+                        <div class="text pl-3">
+                            <h4>${i.title}</h4>
+                            <p class="mb-0"><span class="price">฿${i.price.toLocaleString()}</span><span class="quantity ml-3">จำนวน: ${i.qty}</span></p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                if (dropdownDetails.length > 3) {
+                    dropdownHTML += `<div class="dropdown-item text-center text-muted small">และอีก ${dropdownDetails.length - 3} รายการ...</div>`;
+                }
+            }
+
+            dropdownHTML += `
+                <a class="dropdown-item text-center btn-link d-block w-100" href="cart.html">
+                    View All
+                    <span class="ion-ios-arrow-round-forward"></span>
+                </a>
+            `;
+            dropdownMenu.innerHTML = dropdownHTML;
         }
 
         const tbody = document.querySelector('.table tbody');
@@ -285,6 +321,16 @@
     // 6. Lifecycle Initialization
     document.addEventListener('DOMContentLoaded', () => {
         initCart();
+
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('.add-to-cart');
+            if (btn) {
+                e.preventDefault();
+                const id = parseInt(btn.dataset.id);
+                window.handleCartAction('ADD', id);
+                alert(`เพิ่มสินค้าลงตะกร้าแล้ว`);
+            }
+        });
 
         document.addEventListener('click', handleCheckboxClick);
         document.addEventListener('input', handleQuantityChange);

@@ -7,28 +7,23 @@ const path = require('path');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 
-const DB_FILE = path.join(__dirname, '../../data/products.db');
+const USER_DB_FILE = path.join(__dirname, '../../data/users.db');
+const PRODUCT_DB_FILE = path.join(__dirname, '../../data/products.db');
 const SECRET = "SUN_PRO_SECURE_KEY_2026";
 
-async function getDB() {
+async function getUserDB() {
     return open({
-        filename: DB_FILE,
+        filename: USER_DB_FILE,
         driver: sqlite3.Database
     });
 }
 
-// ==========================================
-// GET /products (Serve products from DB)
-// ==========================================
-router.get('/products', async (req, res) => {
-    try {
-        const db = await getDB();
-        const products = await db.all('SELECT * FROM products');
-        res.json(products);
-    } catch (err) {
-        res.status(500).json({ message: "Error reading products from DB" });
-    }
-});
+async function getProductDB() {
+    return open({
+        filename: PRODUCT_DB_FILE,
+        driver: sqlite3.Database
+    });
+}
 
 // ==========================================
 // POST /signup (Use users table in DB)
@@ -40,7 +35,7 @@ router.post('/signup', async (req, res) => {
     }
 
     try {
-        const db = await getDB();
+        const db = await getUserDB();
         const userExists = await db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username]);
         
         if (userExists) {
@@ -72,7 +67,7 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        const db = await getDB();
+        const db = await getUserDB();
         const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
         
         if (!user) {

@@ -4,7 +4,7 @@
 
     // เราจะไม่ใช้ container.innerHTML = 'Loading...' แล้ว เพราะจะไปทับสินค้า Hardcode เดิม
 
-    fetch('data/products.json?t=' + Date.now())
+    fetch('http://localhost:3000/api/products')
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
