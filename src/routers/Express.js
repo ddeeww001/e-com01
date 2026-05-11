@@ -2,28 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const fs = require('fs').promises;
-const path = require('path');
-const sqlite3 = require('sqlite3');
-const { open } = require('sqlite');
-
-const USER_DB_FILE = path.join(__dirname, '../../data/users.db');
-const PRODUCT_DB_FILE = path.join(__dirname, '../../data/products.db');
-const SECRET = "SUN_PRO_SECURE_KEY_2026";
-
-async function getUserDB() {
-    return open({
-        filename: USER_DB_FILE,
-        driver: sqlite3.Database
-    });
-}
-
-async function getProductDB() {
-    return open({
-        filename: PRODUCT_DB_FILE,
-        driver: sqlite3.Database
-    });
-}
+const dbConfig = require('../config/db');
 
 // ==========================================
 // POST /signup (Use users table in DB)
@@ -35,7 +14,7 @@ router.post('/signup', async (req, res) => {
     }
 
     try {
-        const db = await getUserDB();
+        const db = await dbConfig.getUserDB();
         const userExists = await db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username]);
         
         if (userExists) {
@@ -47,8 +26,9 @@ router.post('/signup', async (req, res) => {
         }
 
         const hash = await bcrypt.hash(password, 10);
-        await db.run('INSERT INTO users (username, email, password, role, createdAt) VALUES (?, ?, ?, ?, ?)', 
-            [username, email, hash, 'customer', new Date().toISOString()]);
+        // 🔥 Initialize password_version to 1
+        await db.run('INSERT INTO users (username, email, password, role, password_version, createdAt) VALUES (?, ?, ?, ?, ?, ?)', 
+            [username, email, hash, 'customer', 1, new Date().toISOString()]);
 
         res.status(201).json({ message: "สมัครสมาชิกสำเร็จ" });
     } catch (err) { 
@@ -67,7 +47,7 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        const db = await getUserDB();
+        const db = await dbConfig.getUserDB();
         const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
         
         if (!user) {
@@ -79,18 +59,24 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        const token = jwt.sign({ id: user.id, username: user.username }, SECRET, { expiresIn: '24h' });
+        // 🔥 Phase 1: Include password_version in JWT
+        const SECRET = req.app.get('jwt_secret');
+        const token = jwt.sign({ 
+            id: user.id, 
+            username: user.username, 
+            version: user.password_version 
+        }, SECRET, { expiresIn: '1h' }); // Reduced to 1 hour for security
 
         // 🔥 CSRF Protection: Set JWT in HttpOnly Cookie
         res.cookie('sunToken', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict',
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+            maxAge: 60 * 60 * 1000 // 1 hour
         });
 
         return res.status(200).json({ 
-            token: token, // Keep in body for now to avoid breaking frontend immediately
+            token: token,
             user: { id: user.id, username: user.username, email: user.email, role: user.role }
         });
 

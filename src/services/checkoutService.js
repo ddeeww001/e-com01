@@ -1,16 +1,15 @@
 const userRepository = require('../repositories/userRepository');
 const productRepository = require('../repositories/productRepository');
-const orderRepository = require('../repositories/orderRepository');
 const { getProductDB } = require('../config/db');
 const xss = require('xss');
 const path = require('path');
+const { nanoid } = require('nanoid');
 
 const calculateTotal = async (cart) => {
-    let total = 0;
+    let total = 0; // Will be stored as integer (cents)
     const validation = [];
 
     for (const item of cart) {
-        // Fix Point 1: Negative Quantity Check
         if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
             validation.push({ productId: item.productId, error: 'Invalid quantity' });
             continue;
@@ -24,7 +23,9 @@ const calculateTotal = async (cart) => {
 
         const isAvailable = product.stock_quantity >= item.quantity;
         if (isAvailable) {
-            total += product.price * item.quantity;
+            // 🔥 Phase 2, Item 7: Convert to integer (cents) for precision
+            const priceInCents = Math.round(product.price * 100);
+            total += priceInCents * item.quantity;
         }
         validation.push({
             productId: item.productId,
@@ -38,11 +39,9 @@ const calculateTotal = async (cart) => {
 const placeOrder = async (userId, username, { cart, profile, expectedTotal }) => {
     const productDb = await getProductDB();
     const itemsToProcess = [];
-    let totalAmount = 0;
+    let totalAmountCents = 0;
 
     try {
-        // 🔥 Phase 3: Cross-DB Transaction Support using ATTACH
-        // We attach store.db and users.db to the products.db connection
         const storeDbPath = path.join(__dirname, '../../data/store.db');
         const usersDbPath = path.join(__dirname, '../../data/users.db');
         await productDb.run(`ATTACH DATABASE '${storeDbPath}' AS store_db`);
@@ -50,7 +49,6 @@ const placeOrder = async (userId, username, { cart, profile, expectedTotal }) =>
 
         await productDb.run('BEGIN TRANSACTION');
 
-        // 🔥 XSS Protection: Sanitize profile fields
         const sanitizedProfile = {};
         for (const key in profile) {
             if (typeof profile[key] === 'string') {
@@ -71,30 +69,34 @@ const placeOrder = async (userId, username, { cart, profile, expectedTotal }) =>
                 await productDb.run('ROLLBACK');
                 return { error: `สินค้า "${prod ? prod.title : 'Unknown'}" สต็อกไม่พอ` };
             }
-            const itemTotal = prod.price * item.quantity;
-            totalAmount += itemTotal;
-            itemsToProcess.push({ ...prod, orderQty: item.quantity, itemTotal });
+            // 🔥 Phase 2, Item 7: Convert to integer (cents) for precision
+            const itemPriceCents = Math.round(prod.price * 100);
+            const itemTotalCents = itemPriceCents * item.quantity;
+            totalAmountCents += itemTotalCents;
+            itemsToProcess.push({ ...prod, orderQty: item.quantity, itemTotalCents });
         }
 
-        const orderId = "ORD-" + Date.now();
+        // 🔥 Phase 3, Item 9: Secure Unique Order ID
+        const orderId = nanoid(12);
         
-        // Phase 3: Price Inconsistency Check
-        if (expectedTotal !== undefined && Math.abs(totalAmount - expectedTotal) > 0.01) {
-            await productDb.run('ROLLBACK');
-            return { error: "ราคาในตะกร้ามีการเปลี่ยนแปลง กรุณาตรวจสอบอีกครั้ง" };
+        // Phase 3: Price Inconsistency Check (using cents)
+        if (expectedTotal !== undefined) {
+            const expectedTotalCents = Math.round(expectedTotal * 100);
+            if (totalAmountCents !== expectedTotalCents) {
+                await productDb.run('ROLLBACK');
+                return { error: "ราคาในตะกร้ามีการเปลี่ยนแปลง กรุณาตรวจสอบอีกครั้ง" };
+            }
         }
 
         for (const item of itemsToProcess) {
             await productRepository.updateStock(item.id, item.orderQty, productDb);
             
-            // 🔥 Use the attached store_db
             await productDb.run(`
                 INSERT INTO store_db.orders (user_id, product_id, quantity, total_price, order_id)
                 VALUES (?, ?, ?, ?, ?)
-            `, [userId, item.id, item.orderQty, item.itemTotal, orderId]);
+            `, [userId, item.id, item.orderQty, item.itemTotalCents, orderId]);
         }
 
-        // 🔥 Use the attached users_db for upsert
         const updatedAt = new Date().toISOString();
         const existing = await productDb.get('SELECT id FROM users_db.profiles WHERE userId = ?', [userId]);
         
@@ -117,11 +119,10 @@ const placeOrder = async (userId, username, { cart, profile, expectedTotal }) =>
 
         await productDb.run('COMMIT');
         
-        // Detach after commit
         await productDb.run('DETACH DATABASE store_db');
         await productDb.run('DETACH DATABASE users_db');
         
-        return { success: true, orderId, totalAmount };
+        return { success: true, orderId, totalAmount: totalAmountCents / 100 };
 
     } catch (error) {
         try { await productDb.run('ROLLBACK'); } catch(e) {}
@@ -140,7 +141,6 @@ const getProfile = async (userId) => {
 };
 
 const saveProfile = async (userId, username, profile) => {
-    // 🔥 XSS Protection: Sanitize profile fields
     const sanitizedProfile = {};
     for (const key in profile) {
         if (typeof profile[key] === 'string') {
