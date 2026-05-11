@@ -1,13 +1,27 @@
-const { getUserDB } = require('../config/db');
+const { getStoreDB } = require('../config/db');
 
 const OrderRepository = {
-    async create(userId, productId, quantity, totalPrice, orderId) {
-        const db = await getUserDB();
+    /**
+     * Saves a new order to the store.db database.
+     * @param {number} userId - The ID of the user placing the order.
+     * @param {number} productId - The ID of the product being ordered.
+     * @param {number} quantity - The quantity of the product.
+     * @param {number} totalPrice - The total price of the order.
+     * @returns {Promise<any>} The result of the insertion.
+     */
+    async saveOrder(userId, productId, quantity, totalPrice) {
+        const db = await getStoreDB();
         try {
-            return await db.run(
-                'INSERT INTO orders (user_id, product_id, quantity, total_price, order_id) VALUES (?, ?, ?, ?, ?)',
-                [userId, productId, quantity, totalPrice, orderId]
-            );
+            // SQL INSERT statement as requested
+            const sql = `
+                INSERT INTO orders (user_id, product_id, quantity, total_price)
+                VALUES (?, ?, ?, ?)
+            `;
+            const result = await db.run(sql, [userId, productId, quantity, totalPrice]);
+            return result;
+        } catch (error) {
+            console.error("Database Error (Order Insertion):", error);
+            throw error;
         } finally {
             await db.close();
         }

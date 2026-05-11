@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/userRepository');
-const { SECRET } = require('../middleware/authMiddleware');
+//const { SECRET } = require('../middleware/authMiddleware');
 
 const signup = async (userData) => {
     const { username, email, password } = userData;
