@@ -25,11 +25,13 @@ async function getProductDB() {
 
 // Middleware: Auth Guard
 function authGuard(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // 🔥 CSRF Protection: Support token from cookies or header
+    const token = req.cookies.sunToken || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+    
+    if (!token) {
         return res.status(401).json({ message: 'Unauthorized: No token provided' });
     }
-    const token = authHeader.split(' ')[1];
+
     try {
         req.user = jwt.verify(token, SECRET);
         next();

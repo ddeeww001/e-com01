@@ -1,20 +1,33 @@
 const checkoutService = require('../services/checkoutService');
+const asyncHandler = require('express-async-handler');
 
-const calculateTotal = async (req, res) => {
+/**
+ * 🔥 Phase 3, Item 8: Centralized Error Handling using express-async-handler
+ * This removes the need for try/catch in every controller.
+ */
+
+const calculateTotal = asyncHandler(async (req, res) => {
     const { cart } = req.body;
     if (!Array.isArray(cart)) return res.status(400).json({ message: 'Invalid cart' });
 
-    try {
-        const result = await checkoutService.calculateTotal(cart);
-        res.json(result);
-    } catch (err) {
-        console.error("Calculate Total Error:", err);
-        res.status(500).json({ message: 'Calculation error' });
+    // 🔥 DoS Protection: Limit cart size
+    if (cart.length > 50) {
+        return res.status(400).json({ message: 'Cart too large (Max 50 items)' });
     }
-};
 
-const placeOrder = async (req, res) => {
-    const { cart, profile, paymentMethod, creditCardNumber } = req.body;
+    const result = await checkoutService.calculateTotal(cart);
+    res.json(result);
+});
+
+const placeOrder = asyncHandler(async (req, res) => {
+    const { cart, profile, paymentMethod, creditCardNumber, expectedTotal } = req.body;
+    
+    // 🔥 DoS Protection: Limit cart size
+    if (Array.isArray(cart) && cart.length > 50) {
+        return res.status(400).json({ error: { general: 'ตะกร้าสินค้าใหญ่เกินไป (สูงสุด 50 รายการ)' } });
+    }
+
+    // 💡 Logic Check: expectedTotal validation
     if (!Array.isArray(cart) || cart.length === 0 || !profile) {
         return res.status(400).json({ error: { general: 'ข้อมูลการสั่งซื้อไม่สมบูรณ์' } });
     }
@@ -33,40 +46,27 @@ const placeOrder = async (req, res) => {
 
     if (Object.keys(errors).length > 0) return res.status(400).json({ error: errors });
 
-    try {
-        const result = await checkoutService.placeOrder(req.user.id, req.user.username, { cart, profile, paymentMethod });
-        if (result.error) {
-            return res.status(400).json({ error: { stock: result.error } });
-        }
-        res.json(result);
-    } catch (err) {
-        console.error("Place Order Error:", err);
-        res.status(500).json({ error: { general: 'Server Error' } });
+    const result = await checkoutService.placeOrder(req.user.id, req.user.username, { cart, profile, paymentMethod, expectedTotal });
+    
+    if (result.error) {
+        return res.status(400).json({ error: { stock: result.error } });
     }
-};
+    
+    res.json(result);
+});
 
-const getProfile = async (req, res) => {
-    try {
-        const profile = await checkoutService.getProfile(req.user.id);
-        res.json(profile);
-    } catch (err) {
-        console.error("Get Profile Error:", err);
-        res.json({});
-    }
-};
+const getProfile = asyncHandler(async (req, res) => {
+    const profile = await checkoutService.getProfile(req.user.id);
+    res.json(profile);
+});
 
-const saveProfile = async (req, res) => {
+const saveProfile = asyncHandler(async (req, res) => {
     const { profile } = req.body;
     if (!profile) return res.status(400).json({ message: 'ไม่มีข้อมูล' });
 
-    try {
-        const result = await checkoutService.saveProfile(req.user.id, req.user.username, profile);
-        res.json(result);
-    } catch (err) {
-        console.error("Save Profile Error:", err);
-        res.status(500).json({ message: 'Error' });
-    }
-};
+    const result = await checkoutService.saveProfile(req.user.id, req.user.username, profile);
+    res.json(result);
+});
 
 module.exports = {
     calculateTotal,

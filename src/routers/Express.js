@@ -81,8 +81,16 @@ router.post('/login', async (req, res) => {
 
         const token = jwt.sign({ id: user.id, username: user.username }, SECRET, { expiresIn: '24h' });
 
+        // 🔥 CSRF Protection: Set JWT in HttpOnly Cookie
+        res.cookie('sunToken', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
+
         return res.status(200).json({ 
-            token: token,
+            token: token, // Keep in body for now to avoid breaking frontend immediately
             user: { id: user.id, username: user.username, email: user.email, role: user.role }
         });
 
