@@ -49,7 +49,7 @@ Create a `.env` file in the root directory (refer to `.env.example`):
 
 ```env
 PORT=3000
-JWT_SECRET=your_super_secret_key_here
+JWT_SECRET=your_super_secret_key_here (See .env.example)
 NODE_ENV=development
 ```
 

@@ -45,6 +45,8 @@ function init() {
     // Create the Google Map using out element and options defined above
     var map = new google.maps.Map(mapElement, mapOptions);
     
+    // ⚠️ ลบการเรียก Geocoding API โดยตรงเพื่อความเป็นส่วนตัวและความปลอดภัย (ต้องใช้ API Key)
+    /*
     var addresses = ['New York'];
 
     for (var x = 0; x < addresses.length; x++) {
@@ -59,6 +61,14 @@ function init() {
 
         });
     }
+    */
+    
+    // แสดง Marker แบบ Static แทน (ตัวอย่างพิกัด New York)
+    new google.maps.Marker({
+        position: myLatlng,
+        map: map,
+        icon: 'images/loc.png'
+    });
     
 }
 google.maps.event.addDomListener(window, 'load', init);
