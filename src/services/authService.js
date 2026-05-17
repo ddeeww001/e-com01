@@ -27,7 +27,7 @@ const login = async (credentials) => {
         return null;
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username }, SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '24h' });
 
     return {
         token,
